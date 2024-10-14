@@ -1,0 +1,669 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chen Peng">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="分库分表——4. 主键生成策略前言：  这篇文章取自这篇博客，作为整理和收录，方便后续查阅。 基于数据库的实现方案数据库自增 id  这个就是说你的系统里每次得到一个 id，都是往一个库的一个表里插入一条没什么业务含义的数据，然后获取一个数据库自增的一个 id。拿到这个 id 之后再往对应的分库分表里去写入。   这个方案的好处就是方便简单，谁都会用；缺点就是单库生成自增 id，要是高并发的话，就">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分库分表——4. 主键生成策略">
+<meta property="og:url" content="https://yangtzeshore.github.io/2020/10/21/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8%E2%80%94%E2%80%944.%20%E4%B8%BB%E9%94%AE%E7%94%9F%E6%88%90%E7%AD%96%E7%95%A5/index.html">
+<meta property="og:site_name" content="Pengchen&#39;s Blog">
+<meta property="og:description" content="分库分表——4. 主键生成策略前言：  这篇文章取自这篇博客，作为整理和收录，方便后续查阅。 基于数据库的实现方案数据库自增 id  这个就是说你的系统里每次得到一个 id，都是往一个库的一个表里插入一条没什么业务含义的数据，然后获取一个数据库自增的一个 id。拿到这个 id 之后再往对应的分库分表里去写入。   这个方案的好处就是方便简单，谁都会用；缺点就是单库生成自增 id，要是高并发的话，就">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/yangtzeshore/images/main/database/database-id-sequence-step.png">
+<meta property="article:published_time" content="2020-10-21T10:56:21.000Z">
+<meta property="article:modified_time" content="2024-10-13T08:00:03.292Z">
+<meta property="article:author" content="Chen Peng">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/yangtzeshore/images/main/database/database-id-sequence-step.png">
+  
+  
+  
+  <title>分库分表——4. 主键生成策略 - Pengchen&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yangtzeshore.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Pengchen&#39;s Blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="分库分表——4. 主键生成策略"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2020-10-21 18:56" pubdate>
+          2020年10月21日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.1k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          18 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">分库分表——4. 主键生成策略</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="分库分表——4-主键生成策略"><a href="#分库分表——4-主键生成策略" class="headerlink" title="分库分表——4. 主键生成策略"></a>分库分表——4. 主键生成策略</h1><h3 id="前言："><a href="#前言：" class="headerlink" title="前言："></a>前言：</h3><p>  这篇文章取自<a target="_blank" rel="noopener" href="https://github.com/doocs/advanced-java/blob/master/docs/high-concurrency/database-shard-global-id-generate.md">这篇博客</a>，作为整理和收录，方便后续查阅。</p>
+<h3 id="基于数据库的实现方案"><a href="#基于数据库的实现方案" class="headerlink" title="基于数据库的实现方案"></a>基于数据库的实现方案</h3><h4 id="数据库自增-id"><a href="#数据库自增-id" class="headerlink" title="数据库自增 id"></a>数据库自增 id</h4><p>  这个就是说你的系统里每次得到一个 id，都是往一个库的一个表里插入一条没什么业务含义的数据，然后获取一个数据库自增的一个 id。拿到这个 id 之后再往对应的分库分表里去写入。</p>
+<p>  这个方案的好处就是方便简单，谁都会用；<strong>缺点就是单库生成</strong>自增 id，要是高并发的话，就会有瓶颈的；如果你硬是要改进一下，那么就专门开一个服务出来，这个服务每次就拿到当前 id 最大值，然后自己递增几个 id，一次性返回一批 id，然后再把当前最大 id 值修改成递增几个 id 之后的一个值；但是<strong>无论如何都是基于单个数据库</strong>。</p>
+<p>  <strong>适合的场景</strong>：你分库分表就俩原因，要不就是单库并发太高，要不就是单库数据量太大；除非是你<strong>并发不高，但是数据量太大</strong>导致的分库分表扩容，你可以用这个方案，因为可能每秒最高并发最多就几百，那么就走单独的一个库和表生成自增主键即可。</p>
+<h4 id="设置数据库-sequence-或者表自增字段步长"><a href="#设置数据库-sequence-或者表自增字段步长" class="headerlink" title="设置数据库 sequence 或者表自增字段步长"></a>设置数据库 sequence 或者表自增字段步长</h4><p>  可以通过设置数据库 sequence 或者表的自增字段步长来进行水平伸缩。</p>
+<p>  比如说，现在有 8 个服务节点，每个服务节点使用一个 sequence 功能来产生 ID，每个 sequence 的起始 ID 不同，并且依次递增，步长都是 8。</p>
+<p><a href="https://yangtzeshore.github.io/2020/10/21/%E6%95%B0%E6%8D%AE%E5%BA%93%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8-4-%E4%B8%BB%E9%94%AE%E7%94%9F%E6%88%90%E7%AD%96%E7%95%A5/"><img src="https://raw.githubusercontent.com/yangtzeshore/images/main/database/database-id-sequence-step.png" srcset="/img/loading.gif" lazyload alt="database-id-sequence-step"></a></p>
+<p>  <strong>适合的场景</strong>：在用户防止产生的 ID 重复时，这种方案实现起来比较简单，也能达到性能目标。但是服务节点固定，步长也固定，将来如果还要增加服务节点，就不好搞了。</p>
+<h3 id="UUID"><a href="#UUID" class="headerlink" title="UUID"></a>UUID</h3><p>  好处就是本地生成，不要基于数据库来了；不好之处就是，UUID 太长了、占用空间大，<strong>作为主键性能太差</strong>了；更重要的是，UUID 不具有有序性，会导致 B+ 树索引在写的时候有过多的随机写操作（连续的 ID 可以产生部分顺序写），还有，由于在写的时候不能产生有顺序的 append 操作，而需要进行 insert 操作，将会读取整个 B+ 树节点到内存，在插入这条记录后会将整个节点写回磁盘，这种操作在记录占用空间比较大的情况下，性能下降明显。</p>
+<p>  适合的场景：如果你是要随机生成个什么文件名、编号之类的，你可以用 UUID，但是作为主键是不能用 UUID 的。</p>
+<figure class="highlight livescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs livescript">UUID.randomUUID<span class="hljs-function"><span class="hljs-params">()</span>.<span class="hljs-title">toString</span><span class="hljs-params">()</span>.<span class="hljs-title">replace</span><span class="hljs-params">(<span class="hljs-string">&quot;-&quot;</span>, <span class="hljs-string">&quot;&quot;</span>)</span> -&gt;</span> sfsdf23423rr234sfdaf<br></code></pre></td></tr></table></figure>
+
+<h3 id="获取系统当前时间"><a href="#获取系统当前时间" class="headerlink" title="获取系统当前时间"></a>获取系统当前时间</h3><p>  这个就是获取当前时间即可，但是问题是，<strong>并发很高的时候</strong>，比如一秒并发几千，<strong>会有重复的情况</strong>，这个是肯定不合适的。基本就不用考虑了。</p>
+<p>  适合的场景：一般如果用这个方案，是将当前时间跟很多其他的业务字段拼接起来，作为一个 id，如果业务上你觉得可以接受，那么也是可以的。你可以将别的业务字段值跟当前时间拼接起来，组成一个全局唯一的编号。</p>
+<h3 id="snowflake-算法"><a href="#snowflake-算法" class="headerlink" title="snowflake 算法"></a>snowflake 算法</h3><p>  snowflake 算法是 twitter 开源的分布式 id 生成算法，采用 Scala 语言实现，是把一个 64 位的 long 型的 id，1 个 bit 是不用的，用其中的 41 bits 作为毫秒数，用 10 bits 作为工作机器 id，12 bits 作为序列号。</p>
+<ul>
+<li>1 bit：不用，为啥呢？因为二进制里第一个 bit 为如果是 1，那么都是负数，但是我们生成的 id 都是正数，所以第一个 bit 统一都是 0。</li>
+<li>41 bits：表示的是时间戳，单位是毫秒。41 bits 可以表示的数字多达 <code>2^41 - 1</code> ，也就是可以标识 <code>2^41 - 1</code> 个毫秒值，换算成年就是表示 69 年的时间。</li>
+<li>10 bits：记录工作机器 id，代表的是这个服务最多可以部署在 2^10 台机器上，也就是 1024 台机器。但是 10 bits 里 5 个 bits 代表机房 id，5 个 bits 代表机器 id。意思就是最多代表 <code>2^5</code> 个机房（32 个机房），每个机房里可以代表 <code>2^5</code> 个机器（32 台机器）。</li>
+<li>12 bits：这个是用来记录同一个毫秒内产生的不同 id，12 bits 可以代表的最大正整数是 <code>2^12 - 1 = 4096</code> ，也就是说可以用这个 12 bits 代表的数字来区分<strong>同一个毫秒内</strong>的 4096 个不同的 id。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-number">0</span> | <span class="hljs-number">0001100</span> <span class="hljs-number">10100010</span> <span class="hljs-number">10111110</span> <span class="hljs-number">10001001</span> <span class="hljs-number">01011100</span> <span class="hljs-number">00</span> | <span class="hljs-number">10001</span> | <span class="hljs-number">1</span> <span class="hljs-number">1001</span> | <span class="hljs-number">0000</span> <span class="hljs-number">00000000</span><br><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">IdWorker</span> &#123;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-type">long</span> workerId;<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">long</span> datacenterId;<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">long</span> sequence;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">IdWorker</span><span class="hljs-params">(<span class="hljs-type">long</span> workerId, <span class="hljs-type">long</span> datacenterId, <span class="hljs-type">long</span> sequence)</span> &#123;<br>        <span class="hljs-comment">// sanity check for workerId</span><br>        <span class="hljs-comment">// 这儿不就检查了一下，要求就是你传递进来的机房id和机器id不能超过32，不能小于0</span><br>        <span class="hljs-keyword">if</span> (workerId &gt; maxWorkerId || workerId &lt; <span class="hljs-number">0</span>) &#123;<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">IllegalArgumentException</span>(<br>                    String.format(<span class="hljs-string">&quot;worker Id can&#x27;t be greater than %d or less than 0&quot;</span>, maxWorkerId));<br>        &#125;<br>        <span class="hljs-keyword">if</span> (datacenterId &gt; maxDatacenterId || datacenterId &lt; <span class="hljs-number">0</span>) &#123;<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">IllegalArgumentException</span>(<br>                    String.format(<span class="hljs-string">&quot;datacenter Id can&#x27;t be greater than %d or less than 0&quot;</span>, maxDatacenterId));<br>        &#125;<br>        System.out.printf(<br>                <span class="hljs-string">&quot;worker starting. timestamp left shift %d, datacenter id bits %d, worker id bits %d, sequence bits %d, workerid %d&quot;</span>,<br>                timestampLeftShift, datacenterIdBits, workerIdBits, sequenceBits, workerId);<br><br>        <span class="hljs-built_in">this</span>.workerId = workerId;<br>        <span class="hljs-built_in">this</span>.datacenterId = datacenterId;<br>        <span class="hljs-built_in">this</span>.sequence = sequence;<br>    &#125;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-type">long</span> <span class="hljs-variable">twepoch</span> <span class="hljs-operator">=</span> <span class="hljs-number">1288834974657L</span>;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-type">long</span> <span class="hljs-variable">workerIdBits</span> <span class="hljs-operator">=</span> <span class="hljs-number">5L</span>;<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">long</span> <span class="hljs-variable">datacenterIdBits</span> <span class="hljs-operator">=</span> <span class="hljs-number">5L</span>;<br><br>    <span class="hljs-comment">// 这个是二进制运算，就是 5 bit最多只能有31个数字，也就是说机器id最多只能是32以内</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-type">long</span> <span class="hljs-variable">maxWorkerId</span> <span class="hljs-operator">=</span> -<span class="hljs-number">1L</span> ^ (-<span class="hljs-number">1L</span> &lt;&lt; workerIdBits);<br><br>    <span class="hljs-comment">// 这个是一个意思，就是 5 bit最多只能有31个数字，机房id最多只能是32以内</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-type">long</span> <span class="hljs-variable">maxDatacenterId</span> <span class="hljs-operator">=</span> -<span class="hljs-number">1L</span> ^ (-<span class="hljs-number">1L</span> &lt;&lt; datacenterIdBits);<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">long</span> <span class="hljs-variable">sequenceBits</span> <span class="hljs-operator">=</span> <span class="hljs-number">12L</span>;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-type">long</span> <span class="hljs-variable">workerIdShift</span> <span class="hljs-operator">=</span> sequenceBits;<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">long</span> <span class="hljs-variable">datacenterIdShift</span> <span class="hljs-operator">=</span> sequenceBits + workerIdBits;<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">long</span> <span class="hljs-variable">timestampLeftShift</span> <span class="hljs-operator">=</span> sequenceBits + workerIdBits + datacenterIdBits;<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">long</span> <span class="hljs-variable">sequenceMask</span> <span class="hljs-operator">=</span> -<span class="hljs-number">1L</span> ^ (-<span class="hljs-number">1L</span> &lt;&lt; sequenceBits);<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-type">long</span> <span class="hljs-variable">lastTimestamp</span> <span class="hljs-operator">=</span> -<span class="hljs-number">1L</span>;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-type">long</span> <span class="hljs-title function_">getWorkerId</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">return</span> workerId;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-type">long</span> <span class="hljs-title function_">getDatacenterId</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">return</span> datacenterId;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-type">long</span> <span class="hljs-title function_">getTimestamp</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">return</span> System.currentTimeMillis();<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">synchronized</span> <span class="hljs-type">long</span> <span class="hljs-title function_">nextId</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-comment">// 这儿就是获取当前时间戳，单位是毫秒</span><br>        <span class="hljs-type">long</span> <span class="hljs-variable">timestamp</span> <span class="hljs-operator">=</span> timeGen();<br><br>        <span class="hljs-keyword">if</span> (timestamp &lt; lastTimestamp) &#123;<br>            System.err.printf(<span class="hljs-string">&quot;clock is moving backwards.  Rejecting requests until %d.&quot;</span>, lastTimestamp);<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">RuntimeException</span>(String.format(<br>                    <span class="hljs-string">&quot;Clock moved backwards.  Refusing to generate id for %d milliseconds&quot;</span>, lastTimestamp - timestamp));<br>        &#125;<br><br>        <span class="hljs-keyword">if</span> (lastTimestamp == timestamp) &#123;<br>            <span class="hljs-comment">// 这个意思是说一个毫秒内最多只能有4096个数字</span><br>            <span class="hljs-comment">// 无论你传递多少进来，这个位运算保证始终就是在4096这个范围内，避免你自己传递个sequence超过了4096这个范围</span><br>            sequence = (sequence + <span class="hljs-number">1</span>) &amp; sequenceMask;<br>            <span class="hljs-keyword">if</span> (sequence == <span class="hljs-number">0</span>) &#123;<br>                timestamp = tilNextMillis(lastTimestamp);<br>            &#125;<br>        &#125; <span class="hljs-keyword">else</span> &#123;<br>            sequence = <span class="hljs-number">0</span>;<br>        &#125;<br><br>        <span class="hljs-comment">// 这儿记录一下最近一次生成id的时间戳，单位是毫秒</span><br>        lastTimestamp = timestamp;<br><br>        <span class="hljs-comment">// 这儿就是将时间戳左移，放到 41 bit那儿；</span><br>        <span class="hljs-comment">// 将机房 id左移放到 5 bit那儿；</span><br>        <span class="hljs-comment">// 将机器id左移放到5 bit那儿；将序号放最后12 bit；</span><br>        <span class="hljs-comment">// 最后拼接起来成一个 64 bit的二进制数字，转换成 10 进制就是个 long 型</span><br>        <span class="hljs-keyword">return</span> ((timestamp - twepoch) &lt;&lt; timestampLeftShift) | (datacenterId &lt;&lt; datacenterIdShift)<br>                | (workerId &lt;&lt; workerIdShift) | sequence;<br>    &#125;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-type">long</span> <span class="hljs-title function_">tilNextMillis</span><span class="hljs-params">(<span class="hljs-type">long</span> lastTimestamp)</span> &#123;<br>        <span class="hljs-type">long</span> <span class="hljs-variable">timestamp</span> <span class="hljs-operator">=</span> timeGen();<br>        <span class="hljs-keyword">while</span> (timestamp &lt;= lastTimestamp) &#123;<br>            timestamp = timeGen();<br>        &#125;<br>        <span class="hljs-keyword">return</span> timestamp;<br>    &#125;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-type">long</span> <span class="hljs-title function_">timeGen</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">return</span> System.currentTimeMillis();<br>    &#125;<br><br>    <span class="hljs-comment">// ---------------测试---------------</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> &#123;<br>        <span class="hljs-type">IdWorker</span> <span class="hljs-variable">worker</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">IdWorker</span>(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>, <span class="hljs-number">1</span>);<br>        <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> <span class="hljs-variable">i</span> <span class="hljs-operator">=</span> <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">30</span>; i++) &#123;<br>            System.out.println(worker.nextId());<br>        &#125;<br>    &#125;<br><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>  怎么说呢，大概这个意思吧，就是说 41 bit 是当前毫秒单位的一个时间戳，就这意思；然后 5 bit 是你传递进来的一个<strong>机房</strong> id（但是最大只能是 32 以内），另外 5 bit 是你传递进来的<strong>机器</strong> id（但是最大只能是 32 以内），剩下的那个 12 bit 序列号，就是如果跟你上次生成 id 的时间还在一个毫秒内，那么会把顺序给你累加，最多在 4096 个序号以内。</p>
+<p>  所以你自己利用这个工具类，自己搞一个服务，然后对每个机房的每个机器都初始化这么一个东西，刚开始这个机房的这个机器的序号就是 0。然后每次接收到一个请求，说这个机房的这个机器要生成一个 id，你就找到对应的 Worker 生成。</p>
+<p>  利用这个 snowflake 算法，你可以开发自己公司的服务，甚至对于机房 id 和机器 id，反正给你预留了 5 bit + 5 bit，你换成别的有业务含义的东西也可以的。</p>
+<p>  这个 snowflake 算法相对来说还是比较靠谱的，所以你要真是搞分布式 id 生成，如果是高并发啥的，那么用这个应该性能比较好，一般每秒几万并发的场景，也足够你用了。</p>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a target="_blank" rel="noopener" href="https://github.com/doocs/advanced-java/blob/master/docs/high-concurrency/database-shard-global-id-generate.md">1. database-shard-global-id-generate</a></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Database/" class="category-chain-item">Database</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>分库分表——4. 主键生成策略</div>
+      <div>https://yangtzeshore.github.io/2020/10/21/分库分表——4. 主键生成策略/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Chen Peng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2020年10月21日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/10/21/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8%E2%80%94%E2%80%945.%20%E8%AF%BB%E5%86%99%E5%88%86%E7%A6%BB/" title="分库分表——5. 读写分离">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">分库分表——5. 读写分离</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/10/21/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8%E2%80%94%E2%80%943.%20%E5%8A%A8%E6%80%81%E6%89%A9%E5%AE%B9%E7%BC%A9%E5%AE%B9%E6%96%B9%E6%A1%88/" title="分库分表——3. 动态扩容缩容方案">
+                        <span class="hidden-mobile">分库分表——3. 动态扩容缩容方案</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

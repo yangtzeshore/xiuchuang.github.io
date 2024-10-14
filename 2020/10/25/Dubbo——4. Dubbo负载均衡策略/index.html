@@ -1,0 +1,680 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chen Peng">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Dubbo——4. Dubbo负载均衡策略前言  这篇文章取自这篇博客，作为整理和收录，方便后续查阅。 dubbo 负载均衡策略RandomLoadBalance  默认情况下，dubbo 是 RandomLoadBalance ，即随机调用实现负载均衡，可以对 provider 不同实例设置不同的权重，会按照权重来负载均衡，权重越大分配流量越高，一般就用这个默认的就可以了。   算法思想很简单。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Dubbo——4. Dubbo负载均衡策略">
+<meta property="og:url" content="https://yangtzeshore.github.io/2020/10/25/Dubbo%E2%80%94%E2%80%944.%20Dubbo%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E7%AD%96%E7%95%A5/index.html">
+<meta property="og:site_name" content="Pengchen&#39;s Blog">
+<meta property="og:description" content="Dubbo——4. Dubbo负载均衡策略前言  这篇文章取自这篇博客，作为整理和收录，方便后续查阅。 dubbo 负载均衡策略RandomLoadBalance  默认情况下，dubbo 是 RandomLoadBalance ，即随机调用实现负载均衡，可以对 provider 不同实例设置不同的权重，会按照权重来负载均衡，权重越大分配流量越高，一般就用这个默认的就可以了。   算法思想很简单。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-10-25T02:25:23.000Z">
+<meta property="article:modified_time" content="2024-10-13T07:52:52.321Z">
+<meta property="article:author" content="Chen Peng">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Dubbo——4. Dubbo负载均衡策略 - Pengchen&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yangtzeshore.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Pengchen&#39;s Blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Dubbo——4. Dubbo负载均衡策略"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2020-10-25 10:25" pubdate>
+          2020年10月25日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          13 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">Dubbo——4. Dubbo负载均衡策略</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="Dubbo——4-Dubbo负载均衡策略"><a href="#Dubbo——4-Dubbo负载均衡策略" class="headerlink" title="Dubbo——4. Dubbo负载均衡策略"></a>Dubbo——4. Dubbo负载均衡策略</h1><h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  这篇文章取自<a target="_blank" rel="noopener" href="https://github.com/doocs/advanced-java/blob/master/docs/distributed-system/dubbo-load-balancing.md">这篇博客</a>，作为整理和收录，方便后续查阅。</p>
+<h3 id="dubbo-负载均衡策略"><a href="#dubbo-负载均衡策略" class="headerlink" title="dubbo 负载均衡策略"></a>dubbo 负载均衡策略</h3><h4 id="RandomLoadBalance"><a href="#RandomLoadBalance" class="headerlink" title="RandomLoadBalance"></a>RandomLoadBalance</h4><p>  默认情况下，dubbo 是 RandomLoadBalance ，即<strong>随机</strong>调用实现负载均衡，可以对 provider 不同实例<strong>设置不同的权重</strong>，会按照权重来负载均衡，权重越大分配流量越高，一般就用这个默认的就可以了。</p>
+<p>  算法思想很简单。假设有一组服务器 servers &#x3D; <code>[A, B, C]</code>，他们对应的权重为 weights &#x3D; <code>[5, 3, 2]</code>，权重总和为 10。现在把这些权重值平铺在一维坐标值上，<code>[0, 5)</code> 区间属于服务器 A，<code>[5, 8)</code> 区间属于服务器 B，<code>[8, 10)</code> 区间属于服务器 C。接下来通过随机数生成器生成一个范围在 <code>[0, 10)</code> 之间的随机数，然后计算这个随机数会落到哪个区间上。比如数字 3 会落到服务器 A 对应的区间上，此时返回服务器 A 即可。权重越大的机器，在坐标轴上对应的区间范围就越大，因此随机数生成器生成的数字就会有更大的概率落到此区间内。只要随机数生成器产生的随机数分布性很好，在经过多次选择后，每个服务器被选中的次数比例接近其权重比例。比如，经过一万次选择后，服务器 A 被选中的次数大约为 5000 次，服务器 B 被选中的次数约为 3000 次，服务器 C 被选中的次数约为 2000 次。</p>
+<h4 id="RoundRobinLoadBalance"><a href="#RoundRobinLoadBalance" class="headerlink" title="RoundRobinLoadBalance"></a>RoundRobinLoadBalance</h4><p>  这个的话默认就是均匀地将流量打到各个机器上去，但是如果各个机器的性能不一样，容易导致性能差的机器负载过高。所以此时需要调整权重，让性能差的机器承载权重小一些，流量少一些。</p>
+<p>举个栗子。</p>
+<p>  跟运维同学申请机器，有的时候，我们运气好，正好公司资源比较充足，刚刚有一批热气腾腾、刚刚做好的虚拟机新鲜出炉，配置都比较高：8 核 + 16G 机器，申请到 2 台。过了一段时间，我们感觉 2 台机器有点不太够，我就去找运维同学说，“哥儿们，你能不能再给我一台机器”，但是这时只剩下一台 4 核 + 8G 的机器。我要还是得要。</p>
+<p>  这个时候，可以给两台 8 核 16G 的机器设置权重 4，给剩余 1 台 4 核 8G 的机器设置权重 2。</p>
+<h4 id="LeastActiveLoadBalance"><a href="#LeastActiveLoadBalance" class="headerlink" title="LeastActiveLoadBalance"></a>LeastActiveLoadBalance</h4><p>  官网对 <code>LeastActiveLoadBalance</code> 的解释是“<strong>最小活跃数负载均衡</strong>”，活跃调用数越小，表明该服务提供者效率越高，单位时间内可处理更多的请求，那么此时请求会优先分配给该服务提供者。</p>
+<p>  最小活跃数负载均衡算法的基本思想是这样的：</p>
+<p>  每个服务提供者会对应着一个活跃数 <code>active</code>。初始情况下，所有服务提供者的 <code>active</code> 均为 0。每当收到一个请求，对应的服务提供者的 <code>active</code> 会加 1，处理完请求后，<code>active</code> 会减 1。所以，如果服务提供者性能较好，处理请求的效率就越高，那么 <code>active</code> 也会下降的越快。因此可以给这样的服务提供者优先分配请求。</p>
+<p>  当然，除了最小活跃数，<code>LeastActiveLoadBalance</code> 在实现上还引入了权重值。所以准确的来说，<code>LeastActiveLoadBalance</code> 是基于加权最小活跃数算法实现的。</p>
+<h4 id="ConsistentHashLoadBalance"><a href="#ConsistentHashLoadBalance" class="headerlink" title="ConsistentHashLoadBalance"></a>ConsistentHashLoadBalance</h4><p>  一致性 Hash 算法，相同参数的请求一定分发到一个 provider 上去，provider 挂掉的时候，会基于虚拟节点均匀分配剩余的流量，抖动不会太大。<strong>如果你需要的不是随机负载均衡</strong>，是要一类请求都到一个节点，那就走这个一致性 Hash 策略。</p>
+<blockquote>
+<p>关于 dubbo 负载均衡策略更加详细的描述，可以查看官网 <a target="_blank" rel="noopener" href="http://dubbo.apache.org/zh-cn/docs/source_code_guide/loadbalance.html">http://dubbo.apache.org/zh-cn/docs/source_code_guide/loadbalance.html</a> 。</p>
+</blockquote>
+<h3 id="dubbo-集群容错策略"><a href="#dubbo-集群容错策略" class="headerlink" title="dubbo 集群容错策略"></a>dubbo 集群容错策略</h3><h4 id="Failover-Cluster-模式"><a href="#Failover-Cluster-模式" class="headerlink" title="Failover Cluster 模式"></a>Failover Cluster 模式</h4><p>  失败自动切换，自动重试其他机器，<strong>默认</strong>就是这个，常见于读操作。（失败重试其它机器）</p>
+<p>可以通过以下几种方式配置重试次数：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">dubbo:service</span> <span class="hljs-attr">retries</span>=<span class="hljs-string">&quot;2&quot;</span> /&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>  或者</p>
+<figure class="highlight applescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs applescript">&lt;dubbo:<span class="hljs-keyword">reference</span> retries=<span class="hljs-string">&quot;2&quot;</span> /&gt;<br></code></pre></td></tr></table></figure>
+
+<p>  或者</p>
+<figure class="highlight oxygene"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs oxygene">&lt;dubbo:<span class="hljs-keyword">reference</span>&gt;<br>    &lt;dubbo:<span class="hljs-keyword">method</span> <span class="hljs-title function_">name</span>=&quot;<span class="hljs-title function_">findFoo</span>&quot; <span class="hljs-title function_">retries</span>=&quot;2&quot; /&gt;<br>&lt;/<span class="hljs-title function_">dubbo</span>:<span class="hljs-keyword">reference</span>&gt;<br></code></pre></td></tr></table></figure>
+
+<h4 id="Failfast-Cluster-模式"><a href="#Failfast-Cluster-模式" class="headerlink" title="Failfast Cluster 模式"></a>Failfast Cluster 模式</h4><p>  一次调用失败就立即失败，常见于非幂等性的写操作，比如新增一条记录（调用失败就立即失败）</p>
+<h4 id="Failsafe-Cluster-模式"><a href="#Failsafe-Cluster-模式" class="headerlink" title="Failsafe Cluster 模式"></a>Failsafe Cluster 模式</h4><p>  出现异常时忽略掉，常用于不重要的接口调用，比如记录日志。</p>
+<p>  配置示例如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs xml"><span class="hljs-tag">&lt;<span class="hljs-name">dubbo:service</span> <span class="hljs-attr">cluster</span>=<span class="hljs-string">&quot;failsafe&quot;</span> /&gt;</span><br></code></pre></td></tr></table></figure>
+
+<p>  或者</p>
+<figure class="highlight mel"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs mel">&lt;dubbo:<span class="hljs-keyword">reference</span> <span class="hljs-keyword">cluster</span>=<span class="hljs-string">&quot;failsafe&quot;</span> /&gt;<br></code></pre></td></tr></table></figure>
+
+<h4 id="Failback-Cluster-模式"><a href="#Failback-Cluster-模式" class="headerlink" title="Failback Cluster 模式"></a>Failback Cluster 模式</h4><p>  失败了后台自动记录请求，然后定时重发，比较适合于写消息队列这种。</p>
+<h4 id="Forking-Cluster-模式"><a href="#Forking-Cluster-模式" class="headerlink" title="Forking Cluster 模式"></a>Forking Cluster 模式</h4><p>  <strong>并行调用</strong>多个 provider，只要一个成功就立即返回。常用于实时性要求比较高的读操作，但是会浪费更多的服务资源，可通过 <code>forks=&quot;2&quot;</code> 来设置最大并行数。</p>
+<h4 id="Broadcast-Cluster-模式"><a href="#Broadcast-Cluster-模式" class="headerlink" title="Broadcast Cluster 模式"></a>Broadcast Cluster 模式</h4><p>  逐个调用所有的 provider。任何一个 provider 出错则报错（从 <code>2.1.0</code> 版本开始支持）。通常用于通知所有提供者更新缓存或日志等本地资源信息。</p>
+<blockquote>
+<p>关于 dubbo 集群容错策略更加详细的描述，可以查看官网 <a target="_blank" rel="noopener" href="http://dubbo.apache.org/zh-cn/docs/source_code_guide/cluster.html">http://dubbo.apache.org/zh-cn/docs/source_code_guide/cluster.html</a> 。</p>
+</blockquote>
+<h3 id="dubbo-动态代理策略"><a href="#dubbo-动态代理策略" class="headerlink" title="dubbo 动态代理策略"></a>dubbo 动态代理策略</h3><p>  默认使用 javassist 动态字节码生成，创建代理类。但是可以通过 spi 扩展机制配置自己的动态代理策略。</p>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a target="_blank" rel="noopener" href="https://github.com/doocs/advanced-java/blob/master/docs/distributed-system/dubbo-load-balancing.md">1. dubbo-load-balancing</a></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Dubbo/" class="category-chain-item">Dubbo</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Dubbo——4. Dubbo负载均衡策略</div>
+      <div>https://yangtzeshore.github.io/2020/10/25/Dubbo——4. Dubbo负载均衡策略/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Chen Peng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2020年10月25日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/10/25/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E2%80%94%E2%80%941.%20%E6%8E%A5%E5%8F%A3%E5%B9%82%E7%AD%89%E6%80%A7/" title="分布式系统设计——1. 接口幂等性">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">分布式系统设计——1. 接口幂等性</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/10/23/Dubbo%E2%80%94%E2%80%943.%20Dubbo%E5%BA%8F%E5%88%97%E5%8C%96%E5%8D%8F%E8%AE%AE/" title="单点登录的三种实现方式">
+                        <span class="hidden-mobile">单点登录的三种实现方式</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

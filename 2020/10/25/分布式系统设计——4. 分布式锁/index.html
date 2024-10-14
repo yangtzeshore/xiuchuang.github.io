@@ -1,0 +1,689 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chen Peng">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="分布式系统设计——4. 分布式锁前言  这篇文章取自这篇博客，作为整理和收录，方便后续查阅。 Redis 分布式锁  官方叫做 RedLock 算法，是 Redis 官方支持的分布式锁算法。   这个分布式锁有 3 个重要的考量点：  互斥（只能有一个客户端获取锁） 不能死锁 容错（只要大部分 Redis 节点创建了这把锁就可以）  Redis 最普通的分布式锁  第一个最普通的实现方式，就是在">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式系统设计——4. 分布式锁">
+<meta property="og:url" content="https://yangtzeshore.github.io/2020/10/25/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E2%80%94%E2%80%944.%20%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/index.html">
+<meta property="og:site_name" content="Pengchen&#39;s Blog">
+<meta property="og:description" content="分布式系统设计——4. 分布式锁前言  这篇文章取自这篇博客，作为整理和收录，方便后续查阅。 Redis 分布式锁  官方叫做 RedLock 算法，是 Redis 官方支持的分布式锁算法。   这个分布式锁有 3 个重要的考量点：  互斥（只能有一个客户端获取锁） 不能死锁 容错（只要大部分 Redis 节点创建了这把锁就可以）  Redis 最普通的分布式锁  第一个最普通的实现方式，就是在">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/yangtzeshore/images/main/%E5%88%86%E5%B8%83%E5%BC%8F/redis-redlock.png">
+<meta property="article:published_time" content="2020-10-25T06:10:21.000Z">
+<meta property="article:modified_time" content="2024-10-13T08:07:37.066Z">
+<meta property="article:author" content="Chen Peng">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/yangtzeshore/images/main/%E5%88%86%E5%B8%83%E5%BC%8F/redis-redlock.png">
+  
+  
+  
+  <title>分布式系统设计——4. 分布式锁 - Pengchen&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yangtzeshore.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Pengchen&#39;s Blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="分布式系统设计——4. 分布式锁"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2020-10-25 14:10" pubdate>
+          2020年10月25日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.9k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          17 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">分布式系统设计——4. 分布式锁</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h1 id="分布式系统设计——4-分布式锁"><a href="#分布式系统设计——4-分布式锁" class="headerlink" title="分布式系统设计——4. 分布式锁"></a>分布式系统设计——4. 分布式锁</h1><h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>  这篇文章取自<a target="_blank" rel="noopener" href="https://github.com/doocs/advanced-java/blob/master/docs/distributed-system/distributed-lock-redis-vs-zookeeper.md">这篇博客</a>，作为整理和收录，方便后续查阅。</p>
+<h3 id="Redis-分布式锁"><a href="#Redis-分布式锁" class="headerlink" title="Redis 分布式锁"></a>Redis 分布式锁</h3><p>  官方叫做 <code>RedLock</code> 算法，是 Redis 官方支持的分布式锁算法。</p>
+<p>  这个分布式锁有 3 个重要的考量点：</p>
+<ul>
+<li>互斥（只能有一个客户端获取锁）</li>
+<li>不能死锁</li>
+<li>容错（只要大部分 Redis 节点创建了这把锁就可以）</li>
+</ul>
+<h4 id="Redis-最普通的分布式锁"><a href="#Redis-最普通的分布式锁" class="headerlink" title="Redis 最普通的分布式锁"></a>Redis 最普通的分布式锁</h4><p>  第一个最普通的实现方式，就是在 Redis 里使用 <code>SET key value [EX seconds] [PX milliseconds] NX</code> 创建一个 key，这样就算加锁。其中：</p>
+<ul>
+<li><code>NX</code>：表示只有 <code>key</code> 不存在的时候才会设置成功，如果此时 redis 中存在这个 <code>key</code>，那么设置失败，返回 <code>nil</code>。</li>
+<li><code>EX seconds</code>：设置 <code>key</code> 的过期时间，精确到秒级。意思是 <code>seconds</code> 秒后锁自动释放，别人创建的时候如果发现已经有了就不能加锁了。</li>
+<li><code>PX milliseconds</code>：同样是设置 <code>key</code> 的过期时间，精确到毫秒级。</li>
+</ul>
+<p>  比如执行以下命令：</p>
+<figure class="highlight gams"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gams"><span class="hljs-keyword">SET</span> resource_name <span class="hljs-comment">my_random_value PX 30000 NX</span><br></code></pre></td></tr></table></figure>
+
+<p>  释放锁就是删除 key ，但是一般可以用 <code>lua</code> 脚本删除，判断 value 一样才删除：</p>
+<figure class="highlight pgsql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs pgsql"><span class="hljs-comment">-- 删除锁的时候，找到 key 对应的 value，跟自己传过去的 value 做比较，如果是一样的才删除。</span><br><span class="hljs-keyword">if</span> redis.<span class="hljs-keyword">call</span>(&quot;get&quot;,KEYS[<span class="hljs-number">1</span>]) == ARGV[<span class="hljs-number">1</span>] <span class="hljs-keyword">then</span><br>    <span class="hljs-keyword">return</span> redis.<span class="hljs-keyword">call</span>(&quot;del&quot;,KEYS[<span class="hljs-number">1</span>])<br><span class="hljs-keyword">else</span><br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span><br><span class="hljs-keyword">end</span><br></code></pre></td></tr></table></figure>
+
+<p>  为啥要用 <code>random_value</code> 随机值呢？因为如果某个客户端获取到了锁，但是阻塞了很长时间才执行完，比如说超过了 30s，此时可能已经自动释放锁了，此时可能别的客户端已经获取到了这个锁，要是你这个时候直接删除 key 的话会有问题，所以得用随机值加上面的 <code>lua</code> 脚本来释放锁。</p>
+<p>  但是这样是肯定不行的。因为如果是普通的 Redis 单实例，那就是单点故障。或者是 Redis 普通主从，那 Redis 主从异步复制，如果主节点挂了（key 就没有了），key 还没同步到从节点，此时从节点切换为主节点，别人就可以 set key，从而拿到锁。</p>
+<h4 id="RedLock-算法"><a href="#RedLock-算法" class="headerlink" title="RedLock 算法"></a>RedLock 算法</h4><p>  这个场景是假设有一个 Redis cluster，有 5 个 Redis master 实例。然后执行如下步骤获取一把锁：</p>
+<ol>
+<li>获取当前时间戳，单位是毫秒；</li>
+<li>跟上面类似，轮流尝试在每个 master 节点上创建锁，过期时间较短，一般就几十毫秒；</li>
+<li>尝试在<strong>大多数节点</strong>上建立一个锁，比如 5 个节点就要求是 3 个节点 <code>n / 2 + 1</code> ；</li>
+<li>客户端计算建立好锁的时间，如果建立锁的时间小于超时时间，就算建立成功了；</li>
+<li>要是锁建立失败了，那么就依次之前建立过的锁删除；</li>
+<li>只要别人建立了一把分布式锁，你就得<strong>不断轮询去尝试获取锁</strong>。</li>
+</ol>
+<p><a href="https://yangtzeshore.github.io/2020/10/30/%E5%88%86%E5%B8%83%E5%BC%8F-%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1-4-%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81/"><img src="https://raw.githubusercontent.com/yangtzeshore/images/main/%E5%88%86%E5%B8%83%E5%BC%8F/redis-redlock.png" srcset="/img/loading.gif" lazyload alt="redis-redlock"></a></p>
+<p>  <a target="_blank" rel="noopener" href="https://redis.io/">Redis 官方</a>给出了以上两种基于 Redis 实现分布式锁的方法，详细说明可以查看：<a target="_blank" rel="noopener" href="https://redis.io/topics/distlock">https://redis.io/topics/distlock</a> 。</p>
+<h3 id="zk-分布式锁"><a href="#zk-分布式锁" class="headerlink" title="zk 分布式锁"></a>zk 分布式锁</h3><p>  zk 分布式锁，其实可以做的比较简单，就是某个节点尝试创建临时 znode，此时创建成功了就获取了这个锁；这个时候别的客户端来创建锁会失败，只能<strong>注册个监听器</strong>监听这个锁。释放锁就是删除这个 znode，一旦释放掉就会通知客户端，然后有一个等待着的客户端就可以再次重新加锁。</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br></pre></td><td class="code"><pre><code class="hljs csharp"><span class="hljs-comment">/**</span><br><span class="hljs-comment"> * ZooKeeperSession</span><br><span class="hljs-comment"> */</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title">ZooKeeperSession</span> &#123;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> CountDownLatch connectedSemaphore = <span class="hljs-keyword">new</span> CountDownLatch(<span class="hljs-number">1</span>);<br><br>    <span class="hljs-keyword">private</span> ZooKeeper zookeeper;<br>    <span class="hljs-keyword">private</span> CountDownLatch latch;<br><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-title">ZooKeeperSession</span>()</span> &#123;<br>        <span class="hljs-keyword">try</span> &#123;<br>            <span class="hljs-keyword">this</span>.zookeeper = <span class="hljs-keyword">new</span> ZooKeeper(<span class="hljs-string">&quot;192.168.31.187:2181,192.168.31.19:2181,192.168.31.227:2181&quot;</span>, <span class="hljs-number">50000</span>, <span class="hljs-keyword">new</span> ZooKeeperWatcher());<br>            <span class="hljs-keyword">try</span> &#123;<br>                connectedSemaphore.<span class="hljs-keyword">await</span>();<br>            &#125; <span class="hljs-keyword">catch</span> (InterruptedException e) &#123;<br>                e.printStackTrace();<br>            &#125;<br><br>            System.<span class="hljs-keyword">out</span>.println(<span class="hljs-string">&quot;ZooKeeper session established......&quot;</span>);<br>        &#125; <span class="hljs-keyword">catch</span> (Exception e) &#123;<br>            e.printStackTrace();<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 获取分布式锁</span><br><span class="hljs-comment">     *</span><br><span class="hljs-comment">     * @param productId</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> Boolean <span class="hljs-title">acquireDistributedLock</span>(<span class="hljs-params">Long productId</span>)</span> &#123;<br>        String path = <span class="hljs-string">&quot;/product-lock-&quot;</span> + productId;<br><br>        <span class="hljs-keyword">try</span> &#123;<br>            zookeeper.create(path, <span class="hljs-string">&quot;&quot;</span>.getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);<br>            <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;<br>        &#125; <span class="hljs-keyword">catch</span> (Exception e) &#123;<br>            <span class="hljs-keyword">while</span> (<span class="hljs-literal">true</span>) &#123;<br>                <span class="hljs-keyword">try</span> &#123;<br>                    <span class="hljs-comment">// 相当于是给node注册一个监听器，去看看这个监听器是否存在</span><br>                    Stat stat = zk.exists(path, <span class="hljs-literal">true</span>);<br><br>                    <span class="hljs-keyword">if</span> (stat != <span class="hljs-literal">null</span>) &#123;<br>                        <span class="hljs-keyword">this</span>.latch = <span class="hljs-keyword">new</span> CountDownLatch(<span class="hljs-number">1</span>);<br>                        <span class="hljs-keyword">this</span>.latch.<span class="hljs-keyword">await</span>(waitTime, TimeUnit.MILLISECONDS);<br>                        <span class="hljs-keyword">this</span>.latch = <span class="hljs-literal">null</span>;<br>                    &#125;<br>                    zookeeper.create(path, <span class="hljs-string">&quot;&quot;</span>.getBytes(), Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL);<br>                    <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;<br>                &#125; <span class="hljs-keyword">catch</span> (Exception ee) &#123;<br>                    <span class="hljs-keyword">continue</span>;<br>                &#125;<br>            &#125;<br><br>        &#125;<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 释放掉一个分布式锁</span><br><span class="hljs-comment">     *</span><br><span class="hljs-comment">     * @param productId</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">releaseDistributedLock</span>(<span class="hljs-params">Long productId</span>)</span> &#123;<br>        String path = <span class="hljs-string">&quot;/product-lock-&quot;</span> + productId;<br>        <span class="hljs-keyword">try</span> &#123;<br>            zookeeper.delete(path, <span class="hljs-number">-1</span>);<br>            System.<span class="hljs-keyword">out</span>.println(<span class="hljs-string">&quot;release the lock for product[id=&quot;</span> + productId + <span class="hljs-string">&quot;]......&quot;</span>);<br>        &#125; <span class="hljs-keyword">catch</span> (Exception e) &#123;<br>            e.printStackTrace();<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 建立 zk session 的 watcher</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">class</span> <span class="hljs-title">ZooKeeperWatcher</span> <span class="hljs-title">implements</span> <span class="hljs-title">Watcher</span> &#123;<br><br>        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title">process</span>(<span class="hljs-params">WatchedEvent <span class="hljs-keyword">event</span></span>)</span> &#123;<br>            System.<span class="hljs-keyword">out</span>.println(<span class="hljs-string">&quot;Receive watched event: &quot;</span> + <span class="hljs-keyword">event</span>.getState());<br><br>            <span class="hljs-keyword">if</span> (KeeperState.SyncConnected == <span class="hljs-keyword">event</span>.getState()) &#123;<br>                connectedSemaphore.countDown();<br>            &#125;<br><br>            <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.latch != <span class="hljs-literal">null</span>) &#123;<br>                <span class="hljs-keyword">this</span>.latch.countDown();<br>            &#125;<br>        &#125;<br><br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 封装单例的静态内部类</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">class</span> <span class="hljs-title">Singleton</span> &#123;<br><br>        <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> ZooKeeperSession instance;<br><br>        <span class="hljs-keyword">static</span> &#123;<br>            instance = <span class="hljs-keyword">new</span> ZooKeeperSession();<br>        &#125;<br><br>        <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> ZooKeeperSession <span class="hljs-title">getInstance</span>()</span> &#123;<br>            <span class="hljs-keyword">return</span> instance;<br>        &#125;<br><br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 获取单例</span><br><span class="hljs-comment">     *</span><br><span class="hljs-comment">     * @return</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> ZooKeeperSession <span class="hljs-title">getInstance</span>()</span> &#123;<br>        <span class="hljs-keyword">return</span> Singleton.getInstance();<br>    &#125;<br><br>    <span class="hljs-comment">/**</span><br><span class="hljs-comment">     * 初始化单例的便捷方法</span><br><span class="hljs-comment">     */</span><br>    <span class="hljs-function"><span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title">init</span>()</span> &#123;<br>        getInstance();<br>    &#125;<br><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>  也可以采用另一种方式，创建临时顺序节点：</p>
+<p>  如果有一把锁，被多个人给竞争，此时多个人会排队，第一个拿到锁的人会执行，然后释放锁；后面的每个人都会去监听<strong>排在自己前面</strong>的那个人创建的 node 上，一旦某个人释放了锁，排在自己后面的人就会被 ZooKeeper 给通知，一旦被通知了之后，就 ok 了，自己就获取到了锁，就可以执行代码了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">ZooKeeperDistributedLock</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">Watcher</span> &#123;<br><br>    <span class="hljs-keyword">private</span> ZooKeeper zk;<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">String</span> <span class="hljs-variable">locksRoot</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;/locks&quot;</span>;<br>    <span class="hljs-keyword">private</span> String productId;<br>    <span class="hljs-keyword">private</span> String waitNode;<br>    <span class="hljs-keyword">private</span> String lockNode;<br>    <span class="hljs-keyword">private</span> CountDownLatch latch;<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">CountDownLatch</span> <span class="hljs-variable">connectedLatch</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">CountDownLatch</span>(<span class="hljs-number">1</span>);<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">int</span> <span class="hljs-variable">sessionTimeout</span> <span class="hljs-operator">=</span> <span class="hljs-number">30000</span>;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">ZooKeeperDistributedLock</span><span class="hljs-params">(String productId)</span> &#123;<br>        <span class="hljs-built_in">this</span>.productId = productId;<br>        <span class="hljs-keyword">try</span> &#123;<br>            <span class="hljs-type">String</span> <span class="hljs-variable">address</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;192.168.31.187:2181,192.168.31.19:2181,192.168.31.227:2181&quot;</span>;<br>            zk = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ZooKeeper</span>(address, sessionTimeout, <span class="hljs-built_in">this</span>);<br>            connectedLatch.await();<br>        &#125; <span class="hljs-keyword">catch</span> (IOException e) &#123;<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">LockException</span>(e);<br>        &#125; <span class="hljs-keyword">catch</span> (KeeperException e) &#123;<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">LockException</span>(e);<br>        &#125; <span class="hljs-keyword">catch</span> (InterruptedException e) &#123;<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">LockException</span>(e);<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">process</span><span class="hljs-params">(WatchedEvent event)</span> &#123;<br>        <span class="hljs-keyword">if</span> (event.getState() == KeeperState.SyncConnected) &#123;<br>            connectedLatch.countDown();<br>            <span class="hljs-keyword">return</span>;<br>        &#125;<br><br>        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">this</span>.latch != <span class="hljs-literal">null</span>) &#123;<br>            <span class="hljs-built_in">this</span>.latch.countDown();<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">acquireDistributedLock</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">try</span> &#123;<br>            <span class="hljs-keyword">if</span> (<span class="hljs-built_in">this</span>.tryLock()) &#123;<br>                <span class="hljs-keyword">return</span>;<br>            &#125; <span class="hljs-keyword">else</span> &#123;<br>                waitForLock(waitNode, sessionTimeout);<br>            &#125;<br>        &#125; <span class="hljs-keyword">catch</span> (KeeperException e) &#123;<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">LockException</span>(e);<br>        &#125; <span class="hljs-keyword">catch</span> (InterruptedException e) &#123;<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">LockException</span>(e);<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">tryLock</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">try</span> &#123;<br> 		    <span class="hljs-comment">// 传入进去的locksRoot + “/” + productId</span><br>		    <span class="hljs-comment">// 假设productId代表了一个商品id，比如说1</span><br>		    <span class="hljs-comment">// locksRoot = locks</span><br>		    <span class="hljs-comment">// /locks/10000000000，/locks/10000000001，/locks/10000000002</span><br>            lockNode = zk.create(locksRoot + <span class="hljs-string">&quot;/&quot;</span> + productId, <span class="hljs-keyword">new</span> <span class="hljs-title class_">byte</span>[<span class="hljs-number">0</span>], ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.EPHEMERAL_SEQUENTIAL);<br><br>            <span class="hljs-comment">// 看看刚创建的节点是不是最小的节点</span><br>	 	    <span class="hljs-comment">// locks：10000000000，10000000001，10000000002</span><br>            List&lt;String&gt; locks = zk.getChildren(locksRoot, <span class="hljs-literal">false</span>);<br>            Collections.sort(locks);<br><br>            <span class="hljs-keyword">if</span>(lockNode.equals(locksRoot+<span class="hljs-string">&quot;/&quot;</span>+ locks.get(<span class="hljs-number">0</span>)))&#123;<br>                <span class="hljs-comment">//如果是最小的节点,则表示取得锁</span><br>                <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;<br>            &#125;<br><br>            <span class="hljs-comment">//如果不是最小的节点，找到比自己小1的节点</span><br>	  <span class="hljs-type">int</span> <span class="hljs-variable">previousLockIndex</span> <span class="hljs-operator">=</span> -<span class="hljs-number">1</span>;<br>            <span class="hljs-keyword">for</span>(<span class="hljs-type">int</span> <span class="hljs-variable">i</span> <span class="hljs-operator">=</span> <span class="hljs-number">0</span>; i &lt; locks.size(); i++) &#123;<br>		<span class="hljs-keyword">if</span>(lockNode.equals(locksRoot + “/” + locks.get(i))) &#123;<br>	         	    previousLockIndex = i - <span class="hljs-number">1</span>;<br>		    <span class="hljs-keyword">break</span>;<br>		&#125;<br>	   &#125;<br><br>	   <span class="hljs-built_in">this</span>.waitNode = locks.get(previousLockIndex);<br>        &#125; <span class="hljs-keyword">catch</span> (KeeperException e) &#123;<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">LockException</span>(e);<br>        &#125; <span class="hljs-keyword">catch</span> (InterruptedException e) &#123;<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">LockException</span>(e);<br>        &#125;<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;<br>    &#125;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">waitForLock</span><span class="hljs-params">(String waitNode, <span class="hljs-type">long</span> waitTime)</span> <span class="hljs-keyword">throws</span> InterruptedException, KeeperException &#123;<br>        <span class="hljs-type">Stat</span> <span class="hljs-variable">stat</span> <span class="hljs-operator">=</span> zk.exists(locksRoot + <span class="hljs-string">&quot;/&quot;</span> + waitNode, <span class="hljs-literal">true</span>);<br>        <span class="hljs-keyword">if</span> (stat != <span class="hljs-literal">null</span>) &#123;<br>            <span class="hljs-built_in">this</span>.latch = <span class="hljs-keyword">new</span> <span class="hljs-title class_">CountDownLatch</span>(<span class="hljs-number">1</span>);<br>            <span class="hljs-built_in">this</span>.latch.await(waitTime, TimeUnit.MILLISECONDS);<br>            <span class="hljs-built_in">this</span>.latch = <span class="hljs-literal">null</span>;<br>        &#125;<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">unlock</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">try</span> &#123;<br>            <span class="hljs-comment">// 删除/locks/10000000000节点</span><br>            <span class="hljs-comment">// 删除/locks/10000000001节点</span><br>            System.out.println(<span class="hljs-string">&quot;unlock &quot;</span> + lockNode);<br>            zk.delete(lockNode, -<span class="hljs-number">1</span>);<br>            lockNode = <span class="hljs-literal">null</span>;<br>            zk.close();<br>        &#125; <span class="hljs-keyword">catch</span> (InterruptedException e) &#123;<br>            e.printStackTrace();<br>        &#125; <span class="hljs-keyword">catch</span> (KeeperException e) &#123;<br>            e.printStackTrace();<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">LockException</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">RuntimeException</span> &#123;<br>        <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">final</span> <span class="hljs-type">long</span> <span class="hljs-variable">serialVersionUID</span> <span class="hljs-operator">=</span> <span class="hljs-number">1L</span>;<br><br>        <span class="hljs-keyword">public</span> <span class="hljs-title function_">LockException</span><span class="hljs-params">(String e)</span> &#123;<br>            <span class="hljs-built_in">super</span>(e);<br>        &#125;<br><br>        <span class="hljs-keyword">public</span> <span class="hljs-title function_">LockException</span><span class="hljs-params">(Exception e)</span> &#123;<br>            <span class="hljs-built_in">super</span>(e);<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="redis-分布式锁和-zk-分布式锁的对比"><a href="#redis-分布式锁和-zk-分布式锁的对比" class="headerlink" title="redis 分布式锁和 zk 分布式锁的对比"></a>redis 分布式锁和 zk 分布式锁的对比</h3><ul>
+<li>redis 分布式锁，其实<strong>需要自己不断去尝试获取锁</strong>，比较消耗性能。</li>
+<li>zk 分布式锁，获取不到锁，注册个监听器即可，不需要不断主动尝试获取锁，性能开销较小。</li>
+</ul>
+<p>  另外一点就是，如果是 Redis 获取锁的那个客户端 出现 bug 挂了，那么只能等待超时时间之后才能释放锁；而 zk 的话，因为创建的是临时 znode，只要客户端挂了，znode 就没了，此时就自动释放锁。</p>
+<p>  Redis 分布式锁大家没发现好麻烦吗？遍历上锁，计算时间等等……zk 的分布式锁语义清晰实现简单。</p>
+<p>  所以先不分析太多的东西，就说这两点，我个人实践认为 zk 的分布式锁比 Redis 的分布式锁牢靠、而且模型简单易用。</p>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p><a target="_blank" rel="noopener" href="https://github.com/doocs/advanced-java/blob/master/docs/distributed-system/distributed-lock-redis-vs-zookeeper.md">1. distributed-lock-redis-vs-zookeeper</a></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F/" class="category-chain-item">分布式</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>分布式系统设计——4. 分布式锁</div>
+      <div>https://yangtzeshore.github.io/2020/10/25/分布式系统设计——4. 分布式锁/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Chen Peng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2020年10月25日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2020/10/25/Dubbo%E2%80%94%E2%80%945.%20Dubbo%E7%9A%84%20spi%20%E6%80%9D%E6%83%B3/" title="Dubbo——5. Dubbo的 spi 思想">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Dubbo——5. Dubbo的 spi 思想</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2020/10/25/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%E2%80%94%E2%80%943.%20RPC%20%E6%A1%86%E6%9E%B6%E7%AE%80%E5%8D%95%E8%AE%BE%E8%AE%A1/" title="分布式系统设计——3. RPC 框架简单设计">
+                        <span class="hidden-mobile">分布式系统设计——3. RPC 框架简单设计</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
