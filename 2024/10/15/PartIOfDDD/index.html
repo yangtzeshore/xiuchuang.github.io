@@ -1,0 +1,726 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chen Peng">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="最近经常遇到开发谈起DDD的架构设计思想，我翻阅了一些资料后，自己总结了一下。 领域驱动设计（DDD, Domain-Driven Design）是一种设计复杂软件系统的方法，通过将业务领域的知识和技术紧密结合，来指导微服务架构的设计。DDD尤其适合处理复杂、多变的业务系统，在微服务架构中应用也非常广泛。以下是DDD的核心思想、如何在微服务设计中应用，以及代码示例和实际落地的考虑。 1. DDD的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DDD的一些随笔感想I">
+<meta property="og:url" content="https://yangtzeshore.github.io/2024/10/15/PartIOfDDD/index.html">
+<meta property="og:site_name" content="Pengchen&#39;s Blog">
+<meta property="og:description" content="最近经常遇到开发谈起DDD的架构设计思想，我翻阅了一些资料后，自己总结了一下。 领域驱动设计（DDD, Domain-Driven Design）是一种设计复杂软件系统的方法，通过将业务领域的知识和技术紧密结合，来指导微服务架构的设计。DDD尤其适合处理复杂、多变的业务系统，在微服务架构中应用也非常广泛。以下是DDD的核心思想、如何在微服务设计中应用，以及代码示例和实际落地的考虑。 1. DDD的">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-10-15T11:25:28.000Z">
+<meta property="article:modified_time" content="2024-10-15T11:29:56.826Z">
+<meta property="article:author" content="Chen Peng">
+<meta property="article:tag" content="架构设计 DDD">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>DDD的一些随笔感想I - Pengchen&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yangtzeshore.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Pengchen&#39;s Blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="DDD的一些随笔感想I"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-10-15 19:25" pubdate>
+          2024年10月15日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.3k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          11 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">DDD的一些随笔感想I</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>最近经常遇到开发谈起DDD的架构设计思想，我翻阅了一些资料后，自己总结了一下。</p>
+<p>领域驱动设计（DDD, Domain-Driven Design）是一种设计复杂软件系统的方法，通过将业务领域的知识和技术紧密结合，来指导微服务架构的设计。DDD尤其适合处理复杂、多变的业务系统，在微服务架构中应用也非常广泛。以下是DDD的核心思想、如何在微服务设计中应用，以及代码示例和实际落地的考虑。</p>
+<h3 id="1-DDD的核心思想"><a href="#1-DDD的核心思想" class="headerlink" title="1. DDD的核心思想"></a>1. <strong>DDD的核心思想</strong></h3><p>DDD强调对业务领域的深入理解，目的是通过模型化业务概念，帮助技术团队与业务团队达成共识。DDD的核心思想包括以下几个方面：</p>
+<ul>
+<li><strong>核心领域和限界上下文（Bounded Context）</strong>：识别出系统中的多个业务领域，并为每个领域划定边界，确保领域之间相互隔离，避免混淆。</li>
+<li><strong>领域模型（Domain Model）</strong>：是对业务逻辑和规则的抽象表示，领域模型包含了实体（Entity）、值对象（Value Object）、聚合（Aggregate）、领域服务（Domain Service）等概念。</li>
+<li><strong>领域事件（Domain Event）</strong>：系统中发生的重要业务事件，这些事件可以触发其他模块或服务的反应。</li>
+<li><strong>聚合根（Aggregate Root）</strong>：聚合中的一个实体，它负责维护聚合的完整性，对外暴露统一的接口。</li>
+<li><strong>仓储（Repository）</strong>：负责管理聚合根的持久化。</li>
+</ul>
+<h3 id="2-微服务设计中的DDD"><a href="#2-微服务设计中的DDD" class="headerlink" title="2. 微服务设计中的DDD"></a>2. <strong>微服务设计中的DDD</strong></h3><p>在微服务架构中，DDD的核心思想可以帮助将系统拆分为多个独立的服务，每个服务专注于一个限界上下文。每个服务只处理自己领域内的业务逻辑，服务之间通过API或事件进行交互。具体的微服务设计步骤包括：</p>
+<ul>
+<li><p><strong>识别领域和限界上下文</strong>：通过与业务方的讨论，识别出系统中不同的领域。例如，电商系统可能包含“用户管理”、“订单处理”、“库存管理”等限界上下文。</p>
+</li>
+<li><p><strong>划分微服务边界</strong>：根据限界上下文划分微服务，每个微服务负责处理一个限界上下文内的业务逻辑。边界清晰的服务可以减少服务之间的耦合。</p>
+</li>
+<li><p><strong>领域模型设计</strong>：为每个微服务设计其领域模型，包括实体、值对象、聚合根和领域服务。确保业务逻辑封装在聚合内部，保持聚合的一致性。</p>
+</li>
+<li><p><strong>领域事件与服务通信</strong>：微服务之间通过领域事件进行通信，而非直接调用彼此的内部逻辑。事件驱动架构（Event-Driven Architecture）有助于保持服务的解耦。</p>
+</li>
+</ul>
+<h3 id="3-代码示例"><a href="#3-代码示例" class="headerlink" title="3. 代码示例"></a>3. <strong>代码示例</strong></h3><p>假设我们有一个订单服务（Order Service）和库存服务（Inventory Service），两者通过领域事件进行交互。我们可以使用SpringBoot、Spring Data JPA和Kafka来实现。</p>
+<h4 id="订单服务："><a href="#订单服务：" class="headerlink" title="订单服务："></a><strong>订单服务：</strong></h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Entity</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Order</span> &#123;<br>    <span class="hljs-meta">@Id</span><br>    <span class="hljs-meta">@GeneratedValue(strategy = GenerationType.IDENTITY)</span><br>    <span class="hljs-keyword">private</span> Long id;<br><br>    <span class="hljs-keyword">private</span> Long productId;<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">int</span> quantity;<br>    <span class="hljs-keyword">private</span> OrderStatus status;<br><br>    <span class="hljs-comment">// 构造方法、getter和setter省略</span><br><br>    <span class="hljs-comment">// 领域逻辑</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">placeOrder</span><span class="hljs-params">(<span class="hljs-type">int</span> availableStock)</span> &#123;<br>        <span class="hljs-keyword">if</span> (availableStock &lt; <span class="hljs-built_in">this</span>.quantity) &#123;<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">IllegalStateException</span>(<span class="hljs-string">&quot;库存不足&quot;</span>);<br>        &#125;<br>        <span class="hljs-built_in">this</span>.status = OrderStatus.PLACED;<br>        <span class="hljs-comment">// 生成领域事件</span><br>        DomainEventPublisher.publish(<span class="hljs-keyword">new</span> <span class="hljs-title class_">OrderPlacedEvent</span>(<span class="hljs-built_in">this</span>.id, <span class="hljs-built_in">this</span>.productId, <span class="hljs-built_in">this</span>.quantity));<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="库存服务（监听领域事件）："><a href="#库存服务（监听领域事件）：" class="headerlink" title="库存服务（监听领域事件）："></a><strong>库存服务（监听领域事件）：</strong></h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Service</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">InventoryService</span> &#123;<br><br>    <span class="hljs-meta">@Autowired</span><br>    <span class="hljs-keyword">private</span> InventoryRepository inventoryRepository;<br><br>    <span class="hljs-meta">@KafkaListener(topics = &quot;OrderPlacedEvent&quot;, groupId = &quot;inventory-group&quot;)</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">handleOrderPlaced</span><span class="hljs-params">(OrderPlacedEvent event)</span> &#123;<br>        <span class="hljs-type">Inventory</span> <span class="hljs-variable">inventory</span> <span class="hljs-operator">=</span> inventoryRepository.findByProductId(event.getProductId());<br>        inventory.reduceStock(event.getQuantity());<br>        inventoryRepository.save(inventory);<br>    &#125;<br>&#125;<br><br><span class="hljs-meta">@Entity</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Inventory</span> &#123;<br>    <span class="hljs-meta">@Id</span><br>    <span class="hljs-meta">@GeneratedValue(strategy = GenerationType.IDENTITY)</span><br>    <span class="hljs-keyword">private</span> Long id;<br><br>    <span class="hljs-keyword">private</span> Long productId;<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">int</span> availableStock;<br><br>    <span class="hljs-comment">// 构造方法、getter和setter省略</span><br><br>    <span class="hljs-comment">// 领域逻辑</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">reduceStock</span><span class="hljs-params">(<span class="hljs-type">int</span> quantity)</span> &#123;<br>        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">this</span>.availableStock &lt; quantity) &#123;<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">IllegalStateException</span>(<span class="hljs-string">&quot;库存不足&quot;</span>);<br>        &#125;<br>        <span class="hljs-built_in">this</span>.availableStock -= quantity;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="事件发布器："><a href="#事件发布器：" class="headerlink" title="事件发布器："></a><strong>事件发布器：</strong></h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">DomainEventPublisher</span> &#123;<br><br>    <span class="hljs-keyword">private</span> <span class="hljs-keyword">static</span> ApplicationEventPublisher publisher;<br><br>    <span class="hljs-meta">@Autowired</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">DomainEventPublisher</span><span class="hljs-params">(ApplicationEventPublisher publisher)</span> &#123;<br>        DomainEventPublisher.publisher = publisher;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">publish</span><span class="hljs-params">(Object event)</span> &#123;<br>        publisher.publishEvent(event);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="领域事件类："><a href="#领域事件类：" class="headerlink" title="领域事件类："></a><strong>领域事件类：</strong></h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">OrderPlacedEvent</span> &#123;<br>    <span class="hljs-keyword">private</span> Long orderId;<br>    <span class="hljs-keyword">private</span> Long productId;<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">int</span> quantity;<br><br>    <span class="hljs-comment">// 构造方法、getter和setter省略</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="4-项目落地的实际考虑"><a href="#4-项目落地的实际考虑" class="headerlink" title="4. 项目落地的实际考虑"></a>4. <strong>项目落地的实际考虑</strong></h3><p>在实际项目中应用DDD和微服务时，需要考虑以下几点：</p>
+<ul>
+<li><p><strong>团队协作</strong>：DDD的关键是与业务团队保持密切沟通。每个微服务的领域模型应与业务需求紧密贴合，避免偏离业务现实。</p>
+</li>
+<li><p><strong>技术选型</strong>：选择合适的技术栈来实现微服务架构。通常，SpringBoot、Spring Cloud、Kafka、Docker、Kubernetes等都是微服务常用的技术栈。</p>
+</li>
+<li><p><strong>性能和可扩展性</strong>：微服务架构中，服务间的通信（如事件传递）可能带来延迟，因此需要考虑消息队列、缓存和负载均衡等技术。</p>
+</li>
+<li><p><strong>数据一致性</strong>：在微服务架构中，数据一致性是一个挑战。通常，我们可以使用事件溯源（Event Sourcing）、Saga模式等来解决分布式事务问题。</p>
+</li>
+<li><p><strong>监控与故障恢复</strong>：在生产环境中，微服务需要有完善的监控、日志和报警机制，以快速发现和处理故障。</p>
+</li>
+</ul>
+<p>在之后的几篇中，我会更深入地讲解每个部分，包括聚合、事件驱动架构、Saga模式等高级主题，帮助你逐步落地到实际项目中。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%9E%B6%E6%9E%84/" class="category-chain-item">架构</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1-DDD/" class="print-no-link">#架构设计 DDD</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>DDD的一些随笔感想I</div>
+      <div>https://yangtzeshore.github.io/2024/10/15/PartIOfDDD/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Chen Peng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年10月15日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/10/15/PartIIOfDDD/" title="DDD的一些随笔感想II">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">DDD的一些随笔感想II</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/10/15/Snowflake/" title="雪花算法及其问题">
+                        <span class="hidden-mobile">雪花算法及其问题</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'yangtzeshore/yangtzeshore.github.io');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

@@ -1,0 +1,731 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chen Peng">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="紧接着上一篇，这篇主要讲解聚合。 聚合（Aggregate）是领域驱动设计（DDD）中的核心概念之一，它用于组织和管理业务模型中的复杂性。聚合在DDD中起着重要作用，帮助我们以分层的方式处理业务逻辑，同时保证数据的一致性和完整性。聚合的设计和管理对于保证微服务架构中的稳定性至关重要。 1. 聚合的定义聚合是领域中的一组相关对象，它们一起处理某个业务场景中的操作。聚合具有以下特征：  聚合根（Agg">
+<meta property="og:type" content="article">
+<meta property="og:title" content="DDD的一些随笔感想II">
+<meta property="og:url" content="https://yangtzeshore.github.io/2024/10/15/PartIIOfDDD/index.html">
+<meta property="og:site_name" content="Pengchen&#39;s Blog">
+<meta property="og:description" content="紧接着上一篇，这篇主要讲解聚合。 聚合（Aggregate）是领域驱动设计（DDD）中的核心概念之一，它用于组织和管理业务模型中的复杂性。聚合在DDD中起着重要作用，帮助我们以分层的方式处理业务逻辑，同时保证数据的一致性和完整性。聚合的设计和管理对于保证微服务架构中的稳定性至关重要。 1. 聚合的定义聚合是领域中的一组相关对象，它们一起处理某个业务场景中的操作。聚合具有以下特征：  聚合根（Agg">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-10-15T11:30:50.000Z">
+<meta property="article:modified_time" content="2024-10-15T11:33:26.597Z">
+<meta property="article:author" content="Chen Peng">
+<meta property="article:tag" content="架构设计 DDD">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>DDD的一些随笔感想II - Pengchen&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yangtzeshore.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Pengchen&#39;s Blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="DDD的一些随笔感想II"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-10-15 19:30" pubdate>
+          2024年10月15日 晚上
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          12 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">DDD的一些随笔感想II</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>紧接着上一篇，这篇主要讲解聚合。</p>
+<p>聚合（Aggregate）是领域驱动设计（DDD）中的核心概念之一，它用于组织和管理业务模型中的复杂性。聚合在DDD中起着重要作用，帮助我们以分层的方式处理业务逻辑，同时保证数据的一致性和完整性。聚合的设计和管理对于保证微服务架构中的稳定性至关重要。</p>
+<h3 id="1-聚合的定义"><a href="#1-聚合的定义" class="headerlink" title="1. 聚合的定义"></a>1. <strong>聚合的定义</strong></h3><p>聚合是领域中的一组相关对象，它们一起处理某个业务场景中的操作。聚合具有以下特征：</p>
+<ul>
+<li><strong>聚合根（Aggregate Root）</strong>：聚合中的一个主对象，它是外界访问聚合的唯一入口，其他对象通过聚合根进行管理。</li>
+<li><strong>边界</strong>：聚合将多个实体和值对象组合成一个逻辑单元，它的边界定义了哪些对象属于这个聚合。</li>
+<li><strong>事务一致性</strong>：在聚合内，所有的操作应当保证数据的一致性。聚合内的修改通常在同一个事务中进行，确保数据的原子性。</li>
+</ul>
+<h4 id="聚合的设计原则"><a href="#聚合的设计原则" class="headerlink" title="聚合的设计原则"></a><strong>聚合的设计原则</strong></h4><ul>
+<li><strong>封装一致性</strong>：聚合应该封装业务逻辑，并负责维护内部状态的一致性。外部不能直接修改聚合中的对象，而必须通过聚合根进行操作。</li>
+<li><strong>小聚合原则</strong>：尽可能保持聚合小而简单。一个聚合包含过多的对象会导致系统复杂度和事务管理的难度增加。</li>
+<li><strong>跨聚合的协作通过事件</strong>：如果多个聚合需要协作完成某个任务，通常通过领域事件进行沟通，而不是直接调用。</li>
+</ul>
+<h3 id="2-聚合的示例"><a href="#2-聚合的示例" class="headerlink" title="2. 聚合的示例"></a>2. <strong>聚合的示例</strong></h3><p>假设我们在一个电子商务系统中有一个订单（Order）聚合。一个订单可能包含多个订单项（OrderItem），同时订单会受到库存的约束和客户支付信息的影响。</p>
+<h4 id="1-聚合内的对象："><a href="#1-聚合内的对象：" class="headerlink" title="1. 聚合内的对象："></a><strong>1. 聚合内的对象：</strong></h4><ul>
+<li><strong>订单（Order）</strong>：聚合根，代表整个订单的主要业务逻辑。</li>
+<li><strong>订单项（OrderItem）</strong>：订单的组成部分，是订单内的子实体。</li>
+<li><strong>值对象（Value Object）</strong>：如价格、商品数量等，不单独存在，没有独立的生命周期。</li>
+</ul>
+<h4 id="2-订单聚合示例代码："><a href="#2-订单聚合示例代码：" class="headerlink" title="2. 订单聚合示例代码："></a><strong>2. 订单聚合示例代码：</strong></h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Entity</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Order</span> &#123;<br>    <span class="hljs-meta">@Id</span><br>    <span class="hljs-meta">@GeneratedValue(strategy = GenerationType.IDENTITY)</span><br>    <span class="hljs-keyword">private</span> Long id;<br><br>    <span class="hljs-keyword">private</span> Long customerId;<br>    <span class="hljs-keyword">private</span> OrderStatus status;<br><br>    <span class="hljs-meta">@OneToMany(cascade = CascadeType.ALL)</span><br>    <span class="hljs-keyword">private</span> List&lt;OrderItem&gt; items = <span class="hljs-keyword">new</span> <span class="hljs-title class_">ArrayList</span>&lt;&gt;();<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">Order</span><span class="hljs-params">(Long customerId)</span> &#123;<br>        <span class="hljs-built_in">this</span>.customerId = customerId;<br>        <span class="hljs-built_in">this</span>.status = OrderStatus.CREATED;<br>    &#125;<br><br>    <span class="hljs-comment">// 聚合根负责所有操作</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">addItem</span><span class="hljs-params">(Long productId, <span class="hljs-type">int</span> quantity, Money price)</span> &#123;<br>        <span class="hljs-type">OrderItem</span> <span class="hljs-variable">item</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">OrderItem</span>(productId, quantity, price);<br>        <span class="hljs-built_in">this</span>.items.add(item);<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">placeOrder</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">if</span> (items.isEmpty()) &#123;<br>            <span class="hljs-keyword">throw</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">IllegalStateException</span>(<span class="hljs-string">&quot;订单项不能为空&quot;</span>);<br>        &#125;<br>        <span class="hljs-built_in">this</span>.status = OrderStatus.PLACED;<br>        <span class="hljs-comment">// 发布领域事件，通知其他聚合</span><br>        DomainEventPublisher.publish(<span class="hljs-keyword">new</span> <span class="hljs-title class_">OrderPlacedEvent</span>(<span class="hljs-built_in">this</span>.id));<br>    &#125;<br><br>    <span class="hljs-comment">// getter 和 setter 省略</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="订单项（OrderItem）："><a href="#订单项（OrderItem）：" class="headerlink" title="订单项（OrderItem）："></a><strong>订单项（OrderItem）：</strong></h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Entity</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">OrderItem</span> &#123;<br>    <span class="hljs-meta">@Id</span><br>    <span class="hljs-meta">@GeneratedValue(strategy = GenerationType.IDENTITY)</span><br>    <span class="hljs-keyword">private</span> Long id;<br><br>    <span class="hljs-keyword">private</span> Long productId;<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">int</span> quantity;<br>    <span class="hljs-keyword">private</span> Money price;<br><br>    <span class="hljs-comment">// 值对象封装业务逻辑，如价格计算</span><br>    <span class="hljs-keyword">public</span> Money <span class="hljs-title function_">calculateTotalPrice</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">return</span> price.multiply(quantity);<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">OrderItem</span><span class="hljs-params">(Long productId, <span class="hljs-type">int</span> quantity, Money price)</span> &#123;<br>        <span class="hljs-built_in">this</span>.productId = productId;<br>        <span class="hljs-built_in">this</span>.quantity = quantity;<br>        <span class="hljs-built_in">this</span>.price = price;<br>    &#125;<br><br>    <span class="hljs-comment">// getter 和 setter 省略</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h4 id="值对象（Money）："><a href="#值对象（Money）：" class="headerlink" title="值对象（Money）："></a><strong>值对象（Money）：</strong></h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Embeddable</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Money</span> &#123;<br>    <span class="hljs-keyword">private</span> BigDecimal amount;<br>    <span class="hljs-keyword">private</span> String currency;<br><br>    <span class="hljs-keyword">protected</span> <span class="hljs-title function_">Money</span><span class="hljs-params">()</span> &#123;&#125;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">Money</span><span class="hljs-params">(BigDecimal amount, String currency)</span> &#123;<br>        <span class="hljs-built_in">this</span>.amount = amount;<br>        <span class="hljs-built_in">this</span>.currency = currency;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> Money <span class="hljs-title function_">multiply</span><span class="hljs-params">(<span class="hljs-type">int</span> multiplier)</span> &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">Money</span>(<span class="hljs-built_in">this</span>.amount.multiply(BigDecimal.valueOf(multiplier)), <span class="hljs-built_in">this</span>.currency);<br>    &#125;<br><br>    <span class="hljs-comment">// getter 和 setter 省略</span><br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="3-聚合的操作"><a href="#3-聚合的操作" class="headerlink" title="3. 聚合的操作"></a>3. <strong>聚合的操作</strong></h3><p>聚合内的所有操作应该通过聚合根来进行。订单中的子实体（OrderItem）不能独立存在，必须通过订单聚合根来管理。这样可以保证订单的整体一致性。</p>
+<h4 id="添加订单项的操作流程："><a href="#添加订单项的操作流程：" class="headerlink" title="添加订单项的操作流程："></a><strong>添加订单项的操作流程：</strong></h4><ol>
+<li>外部系统通过订单聚合根调用<code>addItem()</code>方法来添加新的订单项。</li>
+<li>聚合根负责验证订单项的有效性，并将其添加到订单中。</li>
+<li>其他任何修改（如取消订单、修改订单项等）也必须通过订单聚合根来进行。</li>
+</ol>
+<h3 id="4-跨聚合的通信"><a href="#4-跨聚合的通信" class="headerlink" title="4. 跨聚合的通信"></a>4. <strong>跨聚合的通信</strong></h3><p>在实际系统中，往往会有多个聚合相互协作。通常我们采用事件驱动的方式进行聚合间的通信。比如，当订单被创建后，库存聚合可能需要更新库存数量，这个操作通常通过领域事件来实现。</p>
+<h4 id="事件通信的代码示例："><a href="#事件通信的代码示例：" class="headerlink" title="事件通信的代码示例："></a><strong>事件通信的代码示例：</strong></h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">OrderPlacedEvent</span> &#123;<br>    <span class="hljs-keyword">private</span> Long orderId;<br><br>    <span class="hljs-keyword">public</span> <span class="hljs-title function_">OrderPlacedEvent</span><span class="hljs-params">(Long orderId)</span> &#123;<br>        <span class="hljs-built_in">this</span>.orderId = orderId;<br>    &#125;<br><br>    <span class="hljs-keyword">public</span> Long <span class="hljs-title function_">getOrderId</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">return</span> orderId;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>库存服务可以监听<code>OrderPlacedEvent</code>事件并作出相应的处理：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-meta">@Service</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">InventoryService</span> &#123;<br><br>    <span class="hljs-meta">@KafkaListener(topics = &quot;OrderPlacedEvent&quot;, groupId = &quot;inventory-group&quot;)</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">handleOrderPlaced</span><span class="hljs-params">(OrderPlacedEvent event)</span> &#123;<br>        <span class="hljs-comment">// 处理库存逻辑</span><br>        System.out.println(<span class="hljs-string">&quot;Received OrderPlacedEvent for Order ID: &quot;</span> + event.getOrderId());<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="5-聚合设计的落地建议"><a href="#5-聚合设计的落地建议" class="headerlink" title="5. 聚合设计的落地建议"></a>5. <strong>聚合设计的落地建议</strong></h3><p>在实际项目中，聚合设计需要特别注意以下几点：</p>
+<ul>
+<li><p><strong>聚合大小控制</strong>：尽量保持聚合的简洁，避免一个聚合根管理过多子实体。如果聚合太大，可能会导致事务长时间持锁，影响性能。</p>
+</li>
+<li><p><strong>读写分离</strong>：对于需要高性能读操作的场景，可以考虑使用CQRS（命令查询责任分离）模式，读写操作分开进行，聚合负责写操作，查询则通过专门的查询模型完成。</p>
+</li>
+<li><p><strong>事务管理</strong>：在聚合内部，尽量使用单一事务来处理操作，保证数据的一致性。对于跨聚合的事务，可以考虑使用Saga模式或者事件驱动架构来确保最终一致性。</p>
+</li>
+<li><p><strong>事件驱动架构</strong>：当聚合之间需要协作时，使用事件来进行通信，这样可以解耦聚合间的依赖，同时增强系统的扩展性。</p>
+</li>
+</ul>
+<p>通过以上方式，聚合能够很好地帮助我们管理复杂业务逻辑，并在微服务架构中有效落地DDD的设计思想。在接下来的篇章中，我可以进一步介绍事件驱动架构、Saga模式等内容，以及如何将这些概念结合起来落地到实际项目中。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%9E%B6%E6%9E%84/" class="category-chain-item">架构</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1-DDD/" class="print-no-link">#架构设计 DDD</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>DDD的一些随笔感想II</div>
+      <div>https://yangtzeshore.github.io/2024/10/15/PartIIOfDDD/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Chen Peng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年10月15日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2024/10/15/PartIIIOfDDD/" title="DDD的一些随笔感想III">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">DDD的一些随笔感想III</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/10/15/PartIOfDDD/" title="DDD的一些随笔感想I">
+                        <span class="hidden-mobile">DDD的一些随笔感想I</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'yangtzeshore/yangtzeshore.github.io');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
