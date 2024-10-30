@@ -1,0 +1,781 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chen Peng">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="AI训练的代码中，包括很多教学代码，有很多Python的生成器实践（尤其李沐的课件），但是Web端写日常业务到是很少用到，就顺手查了一下资料，比较了一下各自的实现方式和原理。 Python 中的生成器Python 生成器使用 yield 关键字和协程特性，能够在延迟计算的基础上节省内存并实现流式处理。生成器的实现基于协程（Coroutine）机制，使得函数可以暂停和恢复，从而可以在迭代过程中按需生">
+<meta property="og:type" content="article">
+<meta property="og:title" content="生成器在Python和Java中的实践">
+<meta property="og:url" content="https://yangtzeshore.github.io/2024/10/30/Generator/index.html">
+<meta property="og:site_name" content="Pengchen&#39;s Blog">
+<meta property="og:description" content="AI训练的代码中，包括很多教学代码，有很多Python的生成器实践（尤其李沐的课件），但是Web端写日常业务到是很少用到，就顺手查了一下资料，比较了一下各自的实现方式和原理。 Python 中的生成器Python 生成器使用 yield 关键字和协程特性，能够在延迟计算的基础上节省内存并实现流式处理。生成器的实现基于协程（Coroutine）机制，使得函数可以暂停和恢复，从而可以在迭代过程中按需生">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-10-30T08:37:20.000Z">
+<meta property="article:modified_time" content="2024-10-30T08:41:03.766Z">
+<meta property="article:author" content="Chen Peng">
+<meta property="article:tag" content="Python Java Generator 生成器">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>生成器在Python和Java中的实践 - Pengchen&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yangtzeshore.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Pengchen&#39;s Blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="生成器在Python和Java中的实践"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-10-30 16:37" pubdate>
+          2024年10月30日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          1.4k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          13 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">生成器在Python和Java中的实践</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>AI训练的代码中，包括很多教学代码，有很多Python的生成器实践（尤其李沐的课件），但是Web端写日常业务到是很少用到，就顺手查了一下资料，比较了一下各自的实现方式和原理。</p>
+<h3 id="Python-中的生成器"><a href="#Python-中的生成器" class="headerlink" title="Python 中的生成器"></a>Python 中的生成器</h3><p>Python 生成器使用 <code>yield</code> 关键字和协程特性，能够在延迟计算的基础上节省内存并实现流式处理。生成器的实现基于协程（Coroutine）机制，使得函数可以暂停和恢复，从而可以在迭代过程中按需生成值。</p>
+<hr>
+<h4 id="常用写法"><a href="#常用写法" class="headerlink" title="常用写法"></a>常用写法</h4><h5 id="1-基于-yield-的生成器"><a href="#1-基于-yield-的生成器" class="headerlink" title="1. 基于 yield 的生成器"></a>1. 基于 <code>yield</code> 的生成器</h5><p><code>yield</code> 关键字将函数变成生成器，每次调用 <code>__next__()</code> 时都会恢复函数的执行，直到下一个 <code>yield</code> 表达式。</p>
+<p><strong>代码示例</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">def</span> <span class="hljs-title function_">fibonacci_generator</span>():<br>    a, b = <span class="hljs-number">0</span>, <span class="hljs-number">1</span><br>    <span class="hljs-keyword">while</span> <span class="hljs-literal">True</span>:<br>        <span class="hljs-keyword">yield</span> a<br>        a, b = b, a + b<br><br><span class="hljs-comment"># 使用生成器</span><br>fib_gen = fibonacci_generator()<br><span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">10</span>):<br>    <span class="hljs-built_in">print</span>(<span class="hljs-built_in">next</span>(fib_gen))<br></code></pre></td></tr></table></figure>
+
+<p><strong>使用场景</strong>：</p>
+<ul>
+<li><strong>按需生成</strong>：需要逐个生成数据的情况，如惰性计算和无限序列。</li>
+<li><strong>流数据处理</strong>：处理大数据流和无限数据源，避免一次性加载全部数据。</li>
+</ul>
+<h5 id="2-生成器表达式"><a href="#2-生成器表达式" class="headerlink" title="2. 生成器表达式"></a>2. 生成器表达式</h5><p>生成器表达式类似列表推导式，但使用小括号 <code>()</code>。它不会一次性生成所有数据，而是按需生成。</p>
+<p><strong>代码示例</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs python">gen_exp = (x * x <span class="hljs-keyword">for</span> x <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">10</span>))<br><span class="hljs-keyword">for</span> value <span class="hljs-keyword">in</span> gen_exp:<br>    <span class="hljs-built_in">print</span>(value)<br></code></pre></td></tr></table></figure>
+
+<p><strong>使用场景</strong>：</p>
+<ul>
+<li><strong>轻量级生成</strong>：在简单生成和过滤中按需生成数据。</li>
+<li><strong>内存节省</strong>：在不需要将数据全部存储为列表时使用生成器表达式节省内存。</li>
+</ul>
+<h5 id="3-异步生成器（Python-3-6-）"><a href="#3-异步生成器（Python-3-6-）" class="headerlink" title="3. 异步生成器（Python 3.6+）"></a>3. 异步生成器（Python 3.6+）</h5><p>异步生成器结合 <code>async</code> 和 <code>await</code> 实现异步协程，适合 I&#x2F;O 密集型任务，如数据流的异步处理。</p>
+<p><strong>代码示例</strong>：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs python"><span class="hljs-keyword">import</span> asyncio<br><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">def</span> <span class="hljs-title function_">async_counter</span>():<br>    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">3</span>):<br>        <span class="hljs-keyword">await</span> asyncio.sleep(<span class="hljs-number">1</span>)  <span class="hljs-comment"># 异步暂停</span><br>        <span class="hljs-keyword">yield</span> i<br><br><span class="hljs-comment"># 使用异步生成器</span><br><span class="hljs-keyword">async</span> <span class="hljs-keyword">def</span> <span class="hljs-title function_">main</span>():<br>    <span class="hljs-keyword">async</span> <span class="hljs-keyword">for</span> value <span class="hljs-keyword">in</span> async_counter():<br>        <span class="hljs-built_in">print</span>(value)<br><br>asyncio.run(main())<br></code></pre></td></tr></table></figure>
+
+<p><strong>使用场景</strong>：</p>
+<ul>
+<li><strong>I&#x2F;O 密集型操作</strong>：如异步网络请求或文件读取。</li>
+<li><strong>大规模异步并发</strong>：通过协程并发处理大量 I&#x2F;O 操作，提高效率。</li>
+</ul>
+<h4 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h4><ul>
+<li><strong>协程与控制流</strong>：生成器使用协程机制控制函数的执行流程，<code>yield</code> 会保存当前执行状态，暂停函数运行，函数可以在下次调用时继续。</li>
+<li><strong>异步生成器与异步调度</strong>：异步生成器使用 <code>await</code> 异步等待操作，使得在 I&#x2F;O 密集场景中可以在等待时处理其他任务，实现非阻塞操作。</li>
+</ul>
+<hr>
+<h3 id="Java-中的生成器"><a href="#Java-中的生成器" class="headerlink" title="Java 中的生成器"></a>Java 中的生成器</h3><p>Java 没有原生的生成器支持，因此需要通过 <code>Iterator</code> 接口、<code>Stream</code>、<code>Spliterator</code> 等方法来实现按需生成和流式计算。Java 生成器的实现依赖接口设计，通过控制生成器函数的调用和延迟计算实现生成效果。</p>
+<hr>
+<h4 id="常用写法-1"><a href="#常用写法-1" class="headerlink" title="常用写法"></a>常用写法</h4><h5 id="1-使用-Iterator-接口"><a href="#1-使用-Iterator-接口" class="headerlink" title="1. 使用 Iterator 接口"></a>1. 使用 <code>Iterator</code> 接口</h5><p>通过实现 <code>Iterator</code> 接口的 <code>hasNext()</code> 和 <code>next()</code> 方法来控制数据生成。每次调用 <code>next()</code> 返回一个值，<code>hasNext()</code> 则控制生成终止条件。</p>
+<p><strong>代码示例</strong>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">import</span> java.util.Iterator;<br><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">FibonacciIterator</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">Iterator</span>&lt;Integer&gt; &#123;<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">int</span> <span class="hljs-variable">current</span> <span class="hljs-operator">=</span> <span class="hljs-number">0</span>;<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">int</span> <span class="hljs-variable">next</span> <span class="hljs-operator">=</span> <span class="hljs-number">1</span>;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">hasNext</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>; <span class="hljs-comment">// 无限生成</span><br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">public</span> Integer <span class="hljs-title function_">next</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-type">int</span> <span class="hljs-variable">result</span> <span class="hljs-operator">=</span> current;<br>        <span class="hljs-type">int</span> <span class="hljs-variable">newNext</span> <span class="hljs-operator">=</span> current + next;<br>        current = next;<br>        next = newNext;<br>        <span class="hljs-keyword">return</span> result;<br>    &#125;<br>&#125;<br><br><span class="hljs-comment">// 使用生成器</span><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">Main</span> &#123;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> &#123;<br>        <span class="hljs-type">FibonacciIterator</span> <span class="hljs-variable">fibonacci</span> <span class="hljs-operator">=</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">FibonacciIterator</span>();<br>        <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> <span class="hljs-variable">i</span> <span class="hljs-operator">=</span> <span class="hljs-number">0</span>; i &lt; <span class="hljs-number">10</span>; i++) &#123;<br>            System.out.println(fibonacci.next());<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><strong>使用场景</strong>：</p>
+<ul>
+<li><strong>自定义序列生成</strong>：通过手动控制生成逻辑实现自定义序列，如数学序列。</li>
+<li><strong>无限序列</strong>：生成无限数据流（例如斐波那契数列）时有很大优势。</li>
+</ul>
+<h5 id="2-使用-Stream-API"><a href="#2-使用-Stream-API" class="headerlink" title="2. 使用 Stream API"></a>2. 使用 <code>Stream</code> API</h5><p>Java 8 引入了 <code>Stream</code>，支持 <code>Stream.generate()</code> 和 <code>Stream.iterate()</code> 实现惰性计算和流式生成。</p>
+<p><strong>代码示例</strong>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">import</span> java.util.stream.Stream;<br><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">StreamGeneratorExample</span> &#123;<br>    <span class="hljs-keyword">public</span> <span class="hljs-keyword">static</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">main</span><span class="hljs-params">(String[] args)</span> &#123;<br>        Stream&lt;Integer&gt; fibonacci = Stream.iterate(<span class="hljs-keyword">new</span> <span class="hljs-title class_">int</span>[]&#123;<span class="hljs-number">0</span>, <span class="hljs-number">1</span>&#125;,<br>            arr -&gt; <span class="hljs-keyword">new</span> <span class="hljs-title class_">int</span>[]&#123;arr[<span class="hljs-number">1</span>], arr[<span class="hljs-number">0</span>] + arr[<span class="hljs-number">1</span>]&#125;)<br>            .map(arr -&gt; arr[<span class="hljs-number">0</span>]);<br>        <br>        fibonacci.limit(<span class="hljs-number">10</span>).forEach(System.out::println);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><strong>使用场景</strong>：</p>
+<ul>
+<li><strong>延迟计算</strong>：流式处理大型数据集，避免一次性加载，适合处理大数据。</li>
+<li><strong>无限序列</strong>：通过 <code>Stream.generate()</code> 按需生成无限数据。</li>
+</ul>
+<h5 id="3-使用-Spliterator"><a href="#3-使用-Spliterator" class="headerlink" title="3. 使用 Spliterator"></a>3. 使用 <code>Spliterator</code></h5><p><code>Spliterator</code> 可以自定义生成器逻辑，支持并行分割，适用于大数据的并行处理。</p>
+<p><strong>代码示例</strong>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><code class="hljs java"><span class="hljs-keyword">import</span> java.util.Spliterator;<br><span class="hljs-keyword">import</span> java.util.function.Consumer;<br><br><span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">InfiniteSpliterator</span> <span class="hljs-keyword">implements</span> <span class="hljs-title class_">Spliterator</span>&lt;Integer&gt; &#123;<br>    <span class="hljs-keyword">private</span> <span class="hljs-type">int</span> <span class="hljs-variable">value</span> <span class="hljs-operator">=</span> <span class="hljs-number">0</span>;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-type">boolean</span> <span class="hljs-title function_">tryAdvance</span><span class="hljs-params">(Consumer&lt;? <span class="hljs-built_in">super</span> Integer&gt; action)</span> &#123;<br>        action.accept(value++);<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">public</span> Spliterator&lt;Integer&gt; <span class="hljs-title function_">trySplit</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>; <span class="hljs-comment">// 不支持拆分</span><br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-type">long</span> <span class="hljs-title function_">estimateSize</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">return</span> Long.MAX_VALUE;<br>    &#125;<br><br>    <span class="hljs-meta">@Override</span><br>    <span class="hljs-keyword">public</span> <span class="hljs-type">int</span> <span class="hljs-title function_">characteristics</span><span class="hljs-params">()</span> &#123;<br>        <span class="hljs-keyword">return</span> ORDERED | NONNULL;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p><strong>使用场景</strong>：</p>
+<ul>
+<li><strong>并行处理</strong>：通过 <code>Spliterator</code> 分割并行处理大数据集。</li>
+<li><strong>自定义流式生成</strong>：在需要精确控制生成逻辑和并行化时非常有用。</li>
+</ul>
+<h4 id="实现原理-1"><a href="#实现原理-1" class="headerlink" title="实现原理"></a>实现原理</h4><ul>
+<li><strong>接口设计</strong>：生成器通过 <code>Iterator</code> 接口实现 <code>next()</code> 方法按需生成数据，避免存储整个序列。</li>
+<li><strong>流式处理与延迟计算</strong>：<code>Stream</code> API 提供了延迟计算特性，只有在真正需要数据时才会调用生成函数，避免一次性加载。</li>
+<li><strong>并行生成</strong>：<code>Spliterator</code> 支持并行分割，可以将生成器分割成多个部分并行处理，适合大数据集的高效并行处理。</li>
+</ul>
+<hr>
+<h3 id="总结对比"><a href="#总结对比" class="headerlink" title="总结对比"></a>总结对比</h3><table>
+<thead>
+<tr>
+<th>特性</th>
+<th>Python 生成器</th>
+<th>Java 生成器</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>实现方式</td>
+<td>协程与 <code>yield</code>，支持异步生成器</td>
+<td><code>Iterator</code> 接口、<code>Stream</code>、<code>Spliterator</code></td>
+</tr>
+<tr>
+<td>延迟计算</td>
+<td>是，通过 <code>yield</code> 实现</td>
+<td>是，通过 <code>Stream</code> 或 <code>Iterator</code> 实现</td>
+</tr>
+<tr>
+<td>内存管理</td>
+<td>保留局部状态，避免整个序列加载</td>
+<td>通过接口和流实现延迟计算，避免存储整个序列</td>
+</tr>
+<tr>
+<td>并行和异步生成</td>
+<td>支持异步生成器</td>
+<td><code>Stream.parallel()</code> 或 <code>Spliterator</code> 支持并行</td>
+</tr>
+<tr>
+<td>使用复杂度</td>
+<td>简洁，生成器函数直接使用 <code>yield</code></td>
+<td>依赖接口和流，需要手动控制生成逻辑</td>
+</tr>
+</tbody></table>
+<p>Python 的生成器通过 <code>yield</code> 和协程提供轻量化、简便的延迟生成方式，而 Java 借助接口和流式 API 提供了灵活且适合并行计算的生成器实现。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/Python/" class="category-chain-item">Python</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/Python-Java-Generator-%E7%94%9F%E6%88%90%E5%99%A8/" class="print-no-link">#Python Java Generator 生成器</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>生成器在Python和Java中的实践</div>
+      <div>https://yangtzeshore.github.io/2024/10/30/Generator/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Chen Peng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2024年10月30日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/10/27/SPI/" title="SPI在MySQL JDBC Connector 和 Flink Table Connector的实践">
+                        <span class="hidden-mobile">SPI在MySQL JDBC Connector 和 Flink Table Connector的实践</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'yangtzeshore/yangtzeshore.github.io');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
