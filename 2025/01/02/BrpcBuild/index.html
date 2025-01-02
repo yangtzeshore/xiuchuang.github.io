@@ -1,0 +1,1066 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Chen Peng">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="众所周知，C++编译是个大难题，之前的brpc环境学习环境是放在公司电脑的，现在在自己电脑的虚机Ubuntu16.04上，重新搭建个学习环境。以下是艰苦奋战的结果。 升级 CMake以下是升级 CMake 的详细步骤：  1. 检查当前版本先确认当前系统已安装的 CMake 版本： 1cmake --version   2. 从官方网站下载最新版本访问 CMake 官方下载页面 选择适合你的系统版">
+<meta property="og:type" content="article">
+<meta property="og:title" content="brpc编译环境搭建">
+<meta property="og:url" content="https://yangtzeshore.github.io/2025/01/02/BrpcBuild/index.html">
+<meta property="og:site_name" content="Pengchen&#39;s Blog">
+<meta property="og:description" content="众所周知，C++编译是个大难题，之前的brpc环境学习环境是放在公司电脑的，现在在自己电脑的虚机Ubuntu16.04上，重新搭建个学习环境。以下是艰苦奋战的结果。 升级 CMake以下是升级 CMake 的详细步骤：  1. 检查当前版本先确认当前系统已安装的 CMake 版本： 1cmake --version   2. 从官方网站下载最新版本访问 CMake 官方下载页面 选择适合你的系统版">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2025-01-02T06:20:30.000Z">
+<meta property="article:modified_time" content="2025-01-02T06:49:50.073Z">
+<meta property="article:author" content="Chen Peng">
+<meta property="article:tag" content="brpc C++">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>brpc编译环境搭建 - Pengchen&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1736178_k526ubmyhba.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"yangtzeshore.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Pengchen&#39;s Blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="brpc编译环境搭建"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2025-01-02 14:20" pubdate>
+          2025年1月2日 下午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          25 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">brpc编译环境搭建</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>众所周知，C++编译是个大难题，之前的brpc环境学习环境是放在公司电脑的，现在在自己电脑的虚机Ubuntu16.04上，重新搭建个学习环境。以下是艰苦奋战的结果。</p>
+<h2 id="升级-CMake"><a href="#升级-CMake" class="headerlink" title="升级 CMake"></a>升级 <code>CMake</code></h2><p>以下是升级 <code>CMake</code> 的详细步骤：</p>
+<hr>
+<h3 id="1-检查当前版本"><a href="#1-检查当前版本" class="headerlink" title="1. 检查当前版本"></a><strong>1. 检查当前版本</strong></h3><p>先确认当前系统已安装的 <code>CMake</code> 版本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">cmake --version<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="2-从官方网站下载最新版本"><a href="#2-从官方网站下载最新版本" class="headerlink" title="2. 从官方网站下载最新版本"></a><strong>2. 从官方网站下载最新版本</strong></h3><p>访问 <a target="_blank" rel="noopener" href="https://cmake.org/download/">CMake 官方下载页面</a> 选择适合你的系统版本（通常是 <code>Linux x86_64</code> 的 tar.gz 文件）。</p>
+<p>或者使用命令下载最新的稳定版本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">wget https://github.com/Kitware/CMake/releases/latest/download/cmake-&lt;version&gt;-linux-x86_64.sh<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>注意</strong>：将 <code>&lt;version&gt;</code> 替换为所需的版本号，例如 <code>3.27.6</code>。</p>
+</blockquote>
+<hr>
+<h3 id="3-安装前准备"><a href="#3-安装前准备" class="headerlink" title="3. 安装前准备"></a><strong>3. 安装前准备</strong></h3><p>赋予下载的安装文件执行权限：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">chmod</span> +x cmake-&lt;version&gt;-linux-x86_64.sh<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="4-安装-CMake"><a href="#4-安装-CMake" class="headerlink" title="4. 安装 CMake"></a><strong>4. 安装 CMake</strong></h3><p>运行安装脚本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> ./cmake-&lt;version&gt;-linux-x86_64.sh --prefix=/usr/local --skip-license<br></code></pre></td></tr></table></figure>
+
+<h4 id="参数解释："><a href="#参数解释：" class="headerlink" title="参数解释："></a>参数解释：</h4><ul>
+<li><code>--prefix=/usr/local</code>: 安装路径，默认是 <code>/usr/local</code>。</li>
+<li><code>--skip-license</code>: 跳过显示许可证的确认。</li>
+</ul>
+<hr>
+<h3 id="5-验证安装"><a href="#5-验证安装" class="headerlink" title="5. 验证安装"></a><strong>5. 验证安装</strong></h3><p>验证新版本是否成功安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">cmake --version<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="6-替换旧版本（如果必要）"><a href="#6-替换旧版本（如果必要）" class="headerlink" title="6. 替换旧版本（如果必要）"></a><strong>6. 替换旧版本（如果必要）</strong></h3><p>如果仍然显示旧版本的 <code>CMake</code>，可能是系统路径未更新导致。通过以下命令更新路径：</p>
+<h4 id="检查当前的-CMake-路径："><a href="#检查当前的-CMake-路径：" class="headerlink" title="检查当前的 CMake 路径："></a>检查当前的 CMake 路径：</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">which</span> cmake<br></code></pre></td></tr></table></figure>
+
+<h4 id="更新系统路径："><a href="#更新系统路径：" class="headerlink" title="更新系统路径："></a>更新系统路径：</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> <span class="hljs-built_in">ln</span> -sf /usr/local/bin/cmake /usr/bin/cmake<br></code></pre></td></tr></table></figure>
+
+<p>再次验证版本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">cmake --version<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="7-清理临时文件"><a href="#7-清理临时文件" class="headerlink" title="7. 清理临时文件"></a><strong>7. 清理临时文件</strong></h3><p>安装完成后，可以删除下载的安装包：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">rm</span> -f cmake-&lt;version&gt;-linux-x86_64.sh<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="安装-autoreconf-工具"><a href="#安装-autoreconf-工具" class="headerlink" title="安装 autoreconf 工具"></a>安装 <code>autoreconf</code> 工具</h2><p>安装Protobuf前，需要安装 <code>autoreconf</code> 工具。</p>
+<hr>
+<h4 id="1-安装-autoconf-和相关工具"><a href="#1-安装-autoconf-和相关工具" class="headerlink" title="1. 安装 autoconf 和相关工具"></a>1. <strong>安装 <code>autoconf</code> 和相关工具</strong></h4><p>根据操作系统安装所需的软件包：</p>
+<h5 id="Ubuntu-Debian"><a href="#Ubuntu-Debian" class="headerlink" title="Ubuntu&#x2F;Debian"></a><strong>Ubuntu&#x2F;Debian</strong></h5><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> apt-get update<br><span class="hljs-built_in">sudo</span> apt-get install -y autoconf automake libtool<br></code></pre></td></tr></table></figure>
+
+<h5 id="CentOS-RHEL"><a href="#CentOS-RHEL" class="headerlink" title="CentOS&#x2F;RHEL"></a><strong>CentOS&#x2F;RHEL</strong></h5><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> yum install -y autoconf automake libtool<br></code></pre></td></tr></table></figure>
+
+<h5 id="Fedora"><a href="#Fedora" class="headerlink" title="Fedora"></a><strong>Fedora</strong></h5><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> dnf install -y autoconf automake libtool<br></code></pre></td></tr></table></figure>
+
+<h5 id="MacOS-Homebrew"><a href="#MacOS-Homebrew" class="headerlink" title="MacOS (Homebrew)"></a><strong>MacOS (Homebrew)</strong></h5><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">brew install autoconf automake libtool<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="源码安装Protobuf"><a href="#源码安装Protobuf" class="headerlink" title="源码安装Protobuf"></a>源码安装Protobuf</h2><p>安装 Protobuf（Protocol Buffers）有多种方式，可以根据操作系统和具体需求选择适合的方法。以下是安装 Protobuf 的详细步骤，包括通过包管理器、源码安装以及其他方法。</p>
+<hr>
+<h3 id="1-通过包管理器安装"><a href="#1-通过包管理器安装" class="headerlink" title="1. 通过包管理器安装"></a>1. <strong>通过包管理器安装</strong></h3><h4 id="Ubuntu-Debian-1"><a href="#Ubuntu-Debian-1" class="headerlink" title="Ubuntu&#x2F;Debian"></a><strong>Ubuntu&#x2F;Debian</strong></h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> apt-get update<br><span class="hljs-built_in">sudo</span> apt-get install -y protobuf-compiler libprotobuf-dev<br></code></pre></td></tr></table></figure>
+
+<h4 id="CentOS-RHEL-1"><a href="#CentOS-RHEL-1" class="headerlink" title="CentOS&#x2F;RHEL"></a><strong>CentOS&#x2F;RHEL</strong></h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> yum install -y protobuf protobuf-devel<br></code></pre></td></tr></table></figure>
+
+<h4 id="Fedora-1"><a href="#Fedora-1" class="headerlink" title="Fedora"></a><strong>Fedora</strong></h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> dnf install -y protobuf protobuf-devel<br></code></pre></td></tr></table></figure>
+
+<h4 id="MacOS-Homebrew-1"><a href="#MacOS-Homebrew-1" class="headerlink" title="MacOS (Homebrew)"></a><strong>MacOS (Homebrew)</strong></h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">brew install protobuf<br></code></pre></td></tr></table></figure>
+
+<p>通过包管理器安装是最快捷的方法，但版本可能较旧。如果需要特定版本，请选择源码安装。</p>
+<hr>
+<h3 id="2-从源码安装"><a href="#2-从源码安装" class="headerlink" title="2. 从源码安装"></a>2. <strong>从源码安装</strong></h3><h4 id="步骤"><a href="#步骤" class="headerlink" title="步骤"></a><strong>步骤</strong></h4><ol>
+<li><p><strong>下载源码</strong> 前往 <a target="_blank" rel="noopener" href="https://github.com/protocolbuffers/protobuf/releases">Protobuf Releases 页面</a>，选择需要的版本，下载源码包或克隆仓库：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash">git <span class="hljs-built_in">clone</span> https://github.com/protocolbuffers/protobuf.git<br><span class="hljs-built_in">cd</span> protobuf<br>git checkout v3.6.0 <span class="hljs-comment"># 或者指定其他版本</span><br></code></pre></td></tr></table></figure>
+</li>
+<li><p><strong>构建和安装</strong> 确保安装了构建工具（如 <code>cmake</code> 或 <code>autotools</code>）：</p>
+<ul>
+<li><p>使用 <code>autotools</code>（推荐）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs bash">./autogen.sh<br>./configure<br>make -j$(<span class="hljs-built_in">nproc</span>)<br><span class="hljs-built_in">sudo</span> make install<br><span class="hljs-built_in">sudo</span> ldconfig<br></code></pre></td></tr></table></figure>
+</li>
+<li><p>使用 <code>cmake</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">mkdir</span> build<br><span class="hljs-built_in">cd</span> build<br>cmake .. -DCMAKE_BUILD_TYPE=Release<br>make -j$(<span class="hljs-built_in">nproc</span>)<br><span class="hljs-built_in">sudo</span> make install<br><span class="hljs-built_in">sudo</span> ldconfig<br></code></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p><strong>验证安装</strong> 检查 <code>protoc</code> 的版本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">protoc --version<br></code></pre></td></tr></table></figure></li>
+</ol>
+<hr>
+<h3 id="3-通过预编译的二进制文件安装"><a href="#3-通过预编译的二进制文件安装" class="headerlink" title="3. 通过预编译的二进制文件安装"></a>3. <strong>通过预编译的二进制文件安装</strong></h3><p>如果不想自己构建，可以使用官方提供的预编译二进制文件：</p>
+<ol>
+<li><p>下载对应系统的二进制包：<a target="_blank" rel="noopener" href="https://github.com/protocolbuffers/protobuf/releases">Protobuf Releases</a></p>
+</li>
+<li><p>解压：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">tar -xvf protobuf-all-&lt;version&gt;.tar.gz<br></code></pre></td></tr></table></figure>
+</li>
+<li><p>将二进制文件移动到系统路径：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> <span class="hljs-built_in">mv</span> bin/protoc /usr/local/bin/<br><span class="hljs-built_in">sudo</span> <span class="hljs-built_in">chmod</span> +x /usr/local/bin/protoc<br></code></pre></td></tr></table></figure>
+</li>
+<li><p><strong>验证</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">protoc --version<br></code></pre></td></tr></table></figure></li>
+</ol>
+<hr>
+<h3 id="4-安装到特定目录（可选）"><a href="#4-安装到特定目录（可选）" class="headerlink" title="4. 安装到特定目录（可选）"></a>4. <strong>安装到特定目录（可选）</strong></h3><p>如果需要将 Protobuf 安装到自定义路径，例如 <code>/opt/protobuf</code>，可以在 <code>./configure</code> 或 <code>cmake</code> 时指定路径：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash">./configure --prefix=/opt/protobuf<br>make -j$(<span class="hljs-built_in">nproc</span>)<br>make install<br></code></pre></td></tr></table></figure>
+
+<p>然后将路径添加到环境变量中：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">export</span> PATH=/opt/protobuf/bin:<span class="hljs-variable">$PATH</span><br><span class="hljs-built_in">export</span> LD_LIBRARY_PATH=/opt/protobuf/lib:<span class="hljs-variable">$LD_LIBRARY_PATH</span><br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="5-常见问题"><a href="#5-常见问题" class="headerlink" title="5. 常见问题"></a>5. <strong>常见问题</strong></h3><h4 id="找不到-Protobuf-的头文件或库"><a href="#找不到-Protobuf-的头文件或库" class="headerlink" title="找不到 Protobuf 的头文件或库"></a><strong>找不到 Protobuf 的头文件或库</strong></h4><p>确保 Protobuf 的 <code>include</code> 和 <code>lib</code> 路径已经正确配置：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">export</span> CXXFLAGS=<span class="hljs-string">&quot;-I/usr/local/include&quot;</span><br><span class="hljs-built_in">export</span> LDFLAGS=<span class="hljs-string">&quot;-L/usr/local/lib&quot;</span><br></code></pre></td></tr></table></figure>
+
+<h4 id="Protobuf-版本不兼容"><a href="#Protobuf-版本不兼容" class="headerlink" title="Protobuf 版本不兼容"></a><strong>Protobuf 版本不兼容</strong></h4><p>如果依赖项目对 Protobuf 有版本要求，建议使用源码安装并选择特定版本。</p>
+<h4 id="构建速度慢"><a href="#构建速度慢" class="headerlink" title="构建速度慢"></a><strong>构建速度慢</strong></h4><p>可以使用 <code>make -j$(nproc)</code>，利用多核加速编译。</p>
+<hr>
+<h2 id="源码安装-gflags"><a href="#源码安装-gflags" class="headerlink" title="源码安装 gflags"></a>源码安装 <code>gflags</code></h2><p>以下是从源码安装 <code>gflags</code> 的完整步骤：</p>
+<h3 id="0-卸载旧的-gflags"><a href="#0-卸载旧的-gflags" class="headerlink" title="0. 卸载旧的 gflags"></a><strong>0. 卸载旧的 gflags</strong></h3><p>如果你之前安装了 gflags，可以先清除它：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> <span class="hljs-built_in">rm</span> -rf /usr/local/lib/libgflags.*<br><span class="hljs-built_in">sudo</span> <span class="hljs-built_in">rm</span> -rf /usr/include/gflags<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="1-安装必要的工具和依赖"><a href="#1-安装必要的工具和依赖" class="headerlink" title="1. 安装必要的工具和依赖"></a><strong>1. 安装必要的工具和依赖</strong></h3><p>确保你的系统中安装了构建工具：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> apt update<br><span class="hljs-built_in">sudo</span> apt install -y build-essential cmake git<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="2-下载-gflags-源码"><a href="#2-下载-gflags-源码" class="headerlink" title="2. 下载 gflags 源码"></a><strong>2. 下载 <code>gflags</code> 源码</strong></h3><p>从 <code>gflags</code> 官方仓库克隆源码：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">git <span class="hljs-built_in">clone</span> https://github.com/gflags/gflags.git<br><span class="hljs-built_in">cd</span> gflags<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="3-创建和进入构建目录"><a href="#3-创建和进入构建目录" class="headerlink" title="3. 创建和进入构建目录"></a><strong>3. 创建和进入构建目录</strong></h3><p>创建独立的构建目录以保持源码整洁：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">mkdir</span> build &amp;&amp; <span class="hljs-built_in">cd</span> build<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="4-配置编译选项"><a href="#4-配置编译选项" class="headerlink" title="4. 配置编译选项"></a><strong>4. 配置编译选项</strong></h3><p>运行 <code>cmake</code> 命令配置编译选项：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">cmake .. -DCMAKE_CXX_FLAGS=<span class="hljs-string">&quot;-fPIC&quot;</span> -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_SHARED_LIBS=ON<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="5-编译"><a href="#5-编译" class="headerlink" title="5. 编译"></a><strong>5. 编译</strong></h3><p>使用 <code>make</code> 命令进行编译：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">make -j$(<span class="hljs-built_in">nproc</span>)<br></code></pre></td></tr></table></figure>
+
+<ul>
+<li><code>$(nproc)</code> 会根据 CPU 核心数并行编译，加速构建过程。</li>
+</ul>
+<hr>
+<h3 id="6-安装"><a href="#6-安装" class="headerlink" title="6. 安装"></a><strong>6. 安装</strong></h3><p>编译完成后，安装到指定路径：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> make install<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="7-验证安装"><a href="#7-验证安装" class="headerlink" title="7. 验证安装"></a><strong>7. 验证安装</strong></h3><p>验证 <code>gflags</code> 的头文件和库文件是否安装成功：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">ls</span> /usr/local/include/gflags<br><span class="hljs-built_in">ls</span> /usr/local/lib | grep gflags<br></code></pre></td></tr></table></figure>
+
+<p>如果看到类似以下内容，说明安装成功：</p>
+<figure class="highlight awk"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs awk"><span class="hljs-regexp">/usr/</span>local<span class="hljs-regexp">/include/g</span>flags/gflags.h<br><span class="hljs-regexp">/usr/</span>local<span class="hljs-regexp">/lib/</span>libgflags.so<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="8-配置环境变量（如果必要）"><a href="#8-配置环境变量（如果必要）" class="headerlink" title="8. 配置环境变量（如果必要）"></a><strong>8. 配置环境变量（如果必要）</strong></h3><p>如果库文件安装到非标准路径（如 <code>/usr/local/lib</code>），需要配置环境变量：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">export</span> LIBRARY_PATH=/usr/local/lib:<span class="hljs-variable">$LIBRARY_PATH</span><br><span class="hljs-built_in">export</span> LD_LIBRARY_PATH=/usr/local/lib:<span class="hljs-variable">$LD_LIBRARY_PATH</span><br></code></pre></td></tr></table></figure>
+
+<p>将上述命令添加到 <code>~/.bashrc</code> 以永久生效：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;export LIBRARY_PATH=/usr/local/lib:$LIBRARY_PATH&#x27;</span> &gt;&gt; ~/.bashrc<br><span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH&#x27;</span> &gt;&gt; ~/.bashrc<br><span class="hljs-built_in">source</span> ~/.bashrc<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="9-清理源码（可选）"><a href="#9-清理源码（可选）" class="headerlink" title="9. 清理源码（可选）"></a><strong>9. 清理源码（可选）</strong></h3><p>安装完成后，可以删除源码目录以节省空间：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">cd</span> ../..<br><span class="hljs-built_in">rm</span> -rf gflags<br></code></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<h2 id="源码安装-glog"><a href="#源码安装-glog" class="headerlink" title="源码安装 glog"></a>源码安装 <code>glog</code></h2><p>以下是从源码安装 <code>glog</code> 的完整步骤：</p>
+<hr>
+<h3 id="1-安装依赖"><a href="#1-安装依赖" class="headerlink" title="1. 安装依赖"></a><strong>1. 安装依赖</strong></h3><p>确保系统已安装必要的工具和库：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> apt update<br><span class="hljs-built_in">sudo</span> apt install -y build-essential cmake git<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="2-下载-glog-源码"><a href="#2-下载-glog-源码" class="headerlink" title="2. 下载 glog 源码"></a><strong>2. 下载 <code>glog</code> 源码</strong></h3><p>从 <code>glog</code> 官方仓库克隆源码：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">git <span class="hljs-built_in">clone</span> https://github.com/google/glog.git<br><span class="hljs-built_in">cd</span> glog<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="3-创建和进入构建目录-1"><a href="#3-创建和进入构建目录-1" class="headerlink" title="3. 创建和进入构建目录"></a><strong>3. 创建和进入构建目录</strong></h3><p>创建独立的构建目录以保持源码整洁：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">mkdir</span> build &amp;&amp; <span class="hljs-built_in">cd</span> build<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="4-配置编译选项-1"><a href="#4-配置编译选项-1" class="headerlink" title="4. 配置编译选项"></a><strong>4. 配置编译选项</strong></h3><p>运行 <code>cmake</code> 配置构建环境：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local<br></code></pre></td></tr></table></figure>
+
+<h4 id="参数解释：-1"><a href="#参数解释：-1" class="headerlink" title="参数解释："></a>参数解释：</h4><ul>
+<li><code>-DCMAKE_BUILD_TYPE=Release</code>: 构建优化后的发布版本。</li>
+<li><code>-DCMAKE_INSTALL_PREFIX=/usr/local</code>: 安装到 <code>/usr/local</code>。</li>
+</ul>
+<hr>
+<h3 id="5-编译-1"><a href="#5-编译-1" class="headerlink" title="5. 编译"></a><strong>5. 编译</strong></h3><p>使用 <code>make</code> 编译：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">make -j$(<span class="hljs-built_in">nproc</span>)<br></code></pre></td></tr></table></figure>
+
+<p><code>$(nproc)</code> 会根据 CPU 核心数并行编译，加速构建过程。</p>
+<hr>
+<h3 id="6-安装-1"><a href="#6-安装-1" class="headerlink" title="6. 安装"></a><strong>6. 安装</strong></h3><p>安装 <code>glog</code>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> make install<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="7-验证安装-1"><a href="#7-验证安装-1" class="headerlink" title="7. 验证安装"></a><strong>7. 验证安装</strong></h3><p>检查 <code>glog</code> 是否安装成功：</p>
+<h4 id="检查头文件："><a href="#检查头文件：" class="headerlink" title="检查头文件："></a>检查头文件：</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">ls</span> /usr/local/include/glog<br></code></pre></td></tr></table></figure>
+
+<p>输出类似以下内容表示成功：</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs">logging.h<br></code></pre></td></tr></table></figure>
+
+<h4 id="检查库文件："><a href="#检查库文件：" class="headerlink" title="检查库文件："></a>检查库文件：</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">ls</span> /usr/local/lib | grep glog<br></code></pre></td></tr></table></figure>
+
+<p>输出类似以下内容表示成功：</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver">libglog.so<br>libglog.<span class="hljs-keyword">a</span><br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="8-配置环境变量（如果必要）-1"><a href="#8-配置环境变量（如果必要）-1" class="headerlink" title="8. 配置环境变量（如果必要）"></a><strong>8. 配置环境变量（如果必要）</strong></h3><p>如果库文件安装到了 <code>/usr/local/lib</code> 等非标准路径，添加以下环境变量：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">export</span> LIBRARY_PATH=/usr/local/lib:<span class="hljs-variable">$LIBRARY_PATH</span><br><span class="hljs-built_in">export</span> LD_LIBRARY_PATH=/usr/local/lib:<span class="hljs-variable">$LD_LIBRARY_PATH</span><br></code></pre></td></tr></table></figure>
+
+<p>将命令添加到 <code>~/.bashrc</code> 中以永久生效：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;export LIBRARY_PATH=/usr/local/lib:$LIBRARY_PATH&#x27;</span> &gt;&gt; ~/.bashrc<br><span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH&#x27;</span> &gt;&gt; ~/.bashrc<br><span class="hljs-built_in">source</span> ~/.bashrc<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="9-清理源码（可选）-1"><a href="#9-清理源码（可选）-1" class="headerlink" title="9. 清理源码（可选）"></a><strong>9. 清理源码（可选）</strong></h3><p>安装完成后，可以删除源码以节省空间：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">cd</span> ../..<br><span class="hljs-built_in">rm</span> -rf glog<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="10-如果需要指定-glog-位置"><a href="#10-如果需要指定-glog-位置" class="headerlink" title="10. 如果需要指定 glog 位置"></a><strong>10. 如果需要指定 <code>glog</code> 位置</strong></h3><p>在使用依赖 <code>glog</code> 的项目（如 <code>brpc</code>）时，手动指定 <code>glog</code> 的路径：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">cmake .. -DGLOG_INCLUDE_DIR=/usr/local/include -DGLOG_LIBRARY=/usr/local/lib/libglog.so<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="源码安装-zlib"><a href="#源码安装-zlib" class="headerlink" title="源码安装 zlib"></a>源码安装 <code>zlib</code></h2><p>以下是从源码安装 <code>zlib</code> 的步骤：</p>
+<hr>
+<h3 id="1-下载-zlib-源码"><a href="#1-下载-zlib-源码" class="headerlink" title="1. 下载 zlib 源码"></a><strong>1. 下载 zlib 源码</strong></h3><p>访问 <a target="_blank" rel="noopener" href="https://zlib.net/">zlib 官方网站</a> 下载最新版本的源码压缩包，或者直接使用以下命令下载：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">wget http://zlib.net/zlib-1.2.13.tar.gz<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>注意</strong>：将 <code>1.2.13</code> 替换为你需要的具体版本号。</p>
+</blockquote>
+<hr>
+<h3 id="2-解压源码包"><a href="#2-解压源码包" class="headerlink" title="2. 解压源码包"></a><strong>2. 解压源码包</strong></h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">tar -xvzf zlib-1.2.13.tar.gz<br><span class="hljs-built_in">cd</span> zlib-1.2.13<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="3-配置编译选项"><a href="#3-配置编译选项" class="headerlink" title="3. 配置编译选项"></a><strong>3. 配置编译选项</strong></h3><p>运行配置脚本，准备编译：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">./configure --prefix=/usr/local/zlib<br></code></pre></td></tr></table></figure>
+
+<h4 id="参数说明："><a href="#参数说明：" class="headerlink" title="参数说明："></a><strong>参数说明</strong>：</h4><ul>
+<li><code>--prefix=/usr/local/zlib</code>: 指定安装路径（可以根据需要更改）。</li>
+</ul>
+<hr>
+<h3 id="4-编译-zlib"><a href="#4-编译-zlib" class="headerlink" title="4. 编译 zlib"></a><strong>4. 编译 zlib</strong></h3><p>使用 <code>make</code> 编译源码：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">make -j$(<span class="hljs-built_in">nproc</span>)<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="5-安装-zlib"><a href="#5-安装-zlib" class="headerlink" title="5. 安装 zlib"></a><strong>5. 安装 zlib</strong></h3><p>运行以下命令进行安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> make install<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="6-配置共享库路径"><a href="#6-配置共享库路径" class="headerlink" title="6. 配置共享库路径"></a><strong>6. 配置共享库路径</strong></h3><p>如果 <code>zlib</code> 被安装到非默认路径（例如 <code>/usr/local/zlib</code>），需要将其库路径加入系统库配置：</p>
+<h4 id="添加到-etc-ld-so-conf-d-："><a href="#添加到-etc-ld-so-conf-d-：" class="headerlink" title="**添加到 /etc/ld.so.conf.d/**："></a>**添加到 <code>/etc/ld.so.conf.d/</code>**：</h4><p>创建一个新的配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;/usr/local/zlib/lib&quot;</span> | <span class="hljs-built_in">sudo</span> <span class="hljs-built_in">tee</span> /etc/ld.so.conf.d/zlib.conf<br></code></pre></td></tr></table></figure>
+
+<h4 id="更新共享库缓存："><a href="#更新共享库缓存：" class="headerlink" title="更新共享库缓存："></a><strong>更新共享库缓存</strong>：</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> ldconfig<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="7-验证安装-2"><a href="#7-验证安装-2" class="headerlink" title="7. 验证安装"></a><strong>7. 验证安装</strong></h3><p>通过以下命令确认 <code>zlib</code> 是否正确安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">ldconfig -p | grep zlib<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="8-清理安装包（可选）"><a href="#8-清理安装包（可选）" class="headerlink" title="8. 清理安装包（可选）"></a><strong>8. 清理安装包（可选）</strong></h3><p>安装完成后，可以删除下载的压缩包和源码目录：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">cd</span> ..<br><span class="hljs-built_in">rm</span> -rf zlib-1.2.13 zlib-1.2.13.tar.gz<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="源码安装-OpenSSL"><a href="#源码安装-OpenSSL" class="headerlink" title="源码安装 OpenSSL"></a>源码安装 OpenSSL</h2><p>以下是从源码安装 OpenSSL 的详细步骤：</p>
+<hr>
+<h3 id="1-下载-OpenSSL-源码"><a href="#1-下载-OpenSSL-源码" class="headerlink" title="1. 下载 OpenSSL 源码"></a><strong>1. 下载 OpenSSL 源码</strong></h3><p>访问 <a target="_blank" rel="noopener" href="https://www.openssl.org/source/">OpenSSL 官方网站</a> 下载最新稳定版本的源码，或者使用以下命令下载：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">wget https://www.openssl.org/source/openssl-1.1.1u.tar.gz<br></code></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>注意</strong>：将 <code>1.1.1u</code> 替换为你需要的具体版本号。</p>
+</blockquote>
+<hr>
+<h3 id="2-解压源码包-1"><a href="#2-解压源码包-1" class="headerlink" title="2. 解压源码包"></a><strong>2. 解压源码包</strong></h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">tar -xvzf openssl-1.1.1u.tar.gz<br><span class="hljs-built_in">cd</span> openssl-1.1.1u<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="3-配置编译选项-1"><a href="#3-配置编译选项-1" class="headerlink" title="3. 配置编译选项"></a><strong>3. 配置编译选项</strong></h3><p>运行配置脚本，准备编译：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">./config --prefix=/usr/local/openssl --openssldir=/usr/local/openssl shared zlib<br></code></pre></td></tr></table></figure>
+
+<h4 id="参数说明：-1"><a href="#参数说明：-1" class="headerlink" title="参数说明："></a><strong>参数说明</strong>：</h4><ul>
+<li><code>--prefix=/usr/local/openssl</code>: 指定安装路径（可以根据需要更改）。</li>
+<li><code>--openssldir=/usr/local/openssl</code>: 指定配置文件路径。</li>
+<li><code>shared</code>: 编译共享库（<code>.so</code> 文件）。</li>
+<li><code>zlib</code>: 启用 <code>zlib</code> 压缩支持（需要系统中已安装 <code>zlib</code>）。</li>
+</ul>
+<hr>
+<h3 id="4-编译-OpenSSL"><a href="#4-编译-OpenSSL" class="headerlink" title="4. 编译 OpenSSL"></a><strong>4. 编译 OpenSSL</strong></h3><p>运行以下命令进行编译：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">make -j$(<span class="hljs-built_in">nproc</span>)<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="5-安装-OpenSSL"><a href="#5-安装-OpenSSL" class="headerlink" title="5. 安装 OpenSSL"></a><strong>5. 安装 OpenSSL</strong></h3><p>使用以下命令安装：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> make install<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="6-配置共享库路径-1"><a href="#6-配置共享库路径-1" class="headerlink" title="6. 配置共享库路径"></a><strong>6. 配置共享库路径</strong></h3><p>如果 OpenSSL 被安装到非默认路径（如 <code>/usr/local/openssl</code>），需要将其库路径加入系统库配置：</p>
+<h4 id="添加到-etc-ld-so-conf-d-：-1"><a href="#添加到-etc-ld-so-conf-d-：-1" class="headerlink" title="**添加到 /etc/ld.so.conf.d/**："></a>**添加到 <code>/etc/ld.so.conf.d/</code>**：</h4><p>创建一个新的配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">echo</span> <span class="hljs-string">&quot;/usr/local/openssl/lib&quot;</span> | <span class="hljs-built_in">sudo</span> <span class="hljs-built_in">tee</span> /etc/ld.so.conf.d/openssl.conf<br></code></pre></td></tr></table></figure>
+
+<h4 id="更新共享库缓存：-1"><a href="#更新共享库缓存：-1" class="headerlink" title="更新共享库缓存："></a><strong>更新共享库缓存</strong>：</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> ldconfig<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="7-替换系统默认的-OpenSSL（可选）"><a href="#7-替换系统默认的-OpenSSL（可选）" class="headerlink" title="7. 替换系统默认的 OpenSSL（可选）"></a><strong>7. 替换系统默认的 OpenSSL（可选）</strong></h3><p>如果需要使用新版本替换系统默认的 OpenSSL，可以更新路径：</p>
+<h4 id="备份旧版本的-OpenSSL-可执行文件："><a href="#备份旧版本的-OpenSSL-可执行文件：" class="headerlink" title="备份旧版本的 OpenSSL 可执行文件："></a><strong>备份旧版本的 OpenSSL 可执行文件</strong>：</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> <span class="hljs-built_in">mv</span> /usr/bin/openssl /usr/bin/openssl.bak<br></code></pre></td></tr></table></figure>
+
+<h4 id="创建新版本的软链接："><a href="#创建新版本的软链接：" class="headerlink" title="创建新版本的软链接："></a><strong>创建新版本的软链接</strong>：</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> <span class="hljs-built_in">ln</span> -s /usr/local/openssl/bin/openssl /usr/bin/openssl<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="8-验证安装"><a href="#8-验证安装" class="headerlink" title="8. 验证安装"></a><strong>8. 验证安装</strong></h3><p>检查 OpenSSL 是否安装成功以及版本：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">openssl version -a<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="9-清理安装包（可选）"><a href="#9-清理安装包（可选）" class="headerlink" title="9. 清理安装包（可选）"></a><strong>9. 清理安装包（可选）</strong></h3><p>完成安装后，可以删除下载的压缩包和源码目录：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">cd</span> ..<br><span class="hljs-built_in">rm</span> -rf openssl-1.1.1u openssl-1.1.1u.tar.gz<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a><strong>注意事项</strong></h3><ol>
+<li><p>确保安装过程中未覆盖系统关键依赖的 OpenSSL，否则可能导致系统组件异常。</p>
+</li>
+<li><p>如果需要保留旧版本的 OpenSSL，可以同时维护多个版本，通过环境变量动态切换：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">export</span> PATH=/usr/local/openssl/bin:<span class="hljs-variable">$PATH</span><br></code></pre></td></tr></table></figure></li>
+</ol>
+<h2 id="源码安装brpc"><a href="#源码安装brpc" class="headerlink" title="源码安装brpc"></a>源码安装brpc</h2><p>从源码安装 bRPC 的过程包括获取源码、安装依赖项、构建和安装。以下是详细步骤：</p>
+<hr>
+<h3 id="1-获取-bRPC-源码"><a href="#1-获取-bRPC-源码" class="headerlink" title="1. 获取 bRPC 源码"></a>1. <strong>获取 bRPC 源码</strong></h3><p>bRPC 的源码托管在 GitHub 上。你可以通过以下命令克隆代码仓库：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash">git <span class="hljs-built_in">clone</span> https://github.com/apache/brpc.git<br><span class="hljs-built_in">cd</span> brpc<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="2-安装依赖项"><a href="#2-安装依赖项" class="headerlink" title="2. 安装依赖项"></a>2. <strong>安装依赖项</strong></h3><p>bRPC 需要以下依赖项：</p>
+<ul>
+<li><strong>Protobuf</strong>: 用于序列化数据结构。</li>
+<li><strong>gflags</strong>: 用于命令行参数解析。</li>
+<li><strong>glog</strong>: 用于日志记录。</li>
+<li><strong>zlib</strong>: 用于压缩支持。</li>
+<li><strong>OpenSSL</strong>（可选）: 用于加密支持。</li>
+</ul>
+<p>以上依赖，都已经在上述步骤介绍过了，不在赘述。</p>
+<h4 id="安装依赖项（以-Ubuntu-为例）"><a href="#安装依赖项（以-Ubuntu-为例）" class="headerlink" title="安装依赖项（以 Ubuntu 为例）"></a>安装依赖项（以 Ubuntu 为例）</h4><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> apt-get update<br><span class="hljs-built_in">sudo</span> apt-get install -y build-essential cmake git libprotobuf-dev protobuf-compiler libssl-dev zlib1g-dev libgflags-dev libgoogle-glog-dev<br></code></pre></td></tr></table></figure>
+
+<p>如果你还没有安装 Protobuf，可以选择源码编译（推荐 3.x 版本）。</p>
+<hr>
+<h3 id="3-编译和安装-bRPC"><a href="#3-编译和安装-bRPC" class="headerlink" title="3. 编译和安装 bRPC"></a>3. <strong>编译和安装 bRPC</strong></h3><p>bRPC 支持两种构建系统：<code>cmake</code> 和 <code>make</code>。以下以两种方式分别介绍：</p>
+<h4 id="方法一：使用-CMake"><a href="#方法一：使用-CMake" class="headerlink" title="方法一：使用 CMake"></a><strong>方法一：使用 CMake</strong></h4><p><strong>这也是我编译成功的方法。</strong></p>
+<ol>
+<li><p><strong>生成构建文件</strong> 确保你的 CMake 版本满足要求（建议 CMake 3.10+）。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">mkdir</span> build<br><span class="hljs-built_in">cd</span> build<br>cmake .. -DGFLAGS_INCLUDE_DIR=/usr/local/include -DGFLAGS_LIBRARIES=/usr/local/lib/libgflags.so<br></code></pre></td></tr></table></figure>
+</li>
+<li><p><strong>编译</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">make -j$(<span class="hljs-built_in">nproc</span>)<br></code></pre></td></tr></table></figure>
+</li>
+<li><p><strong>安装</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> make install<br></code></pre></td></tr></table></figure>
+
+<p>默认安装路径是 <code>/usr/local/</code>。你可以通过设置 <code>CMAKE_INSTALL_PREFIX</code> 更改安装路径，例如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">cmake -DCMAKE_INSTALL_PREFIX=/your/custom/path ..<br></code></pre></td></tr></table></figure></li>
+</ol>
+<h4 id="方法二：使用-Make"><a href="#方法二：使用-Make" class="headerlink" title="方法二：使用 Make"></a><strong>方法二：使用 Make</strong></h4><ol>
+<li><p><strong>配置环境</strong> 在 bRPC 源码根目录执行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">sh config_brpc.sh --headers=/usr/include --libs=/usr/lib<br></code></pre></td></tr></table></figure>
+</li>
+<li><p><strong>编译</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">make -j$(<span class="hljs-built_in">nproc</span>)<br></code></pre></td></tr></table></figure>
+</li>
+<li><p><strong>安装</strong> 如果没有安装错误，可以手动将生成的文件拷贝到目标路径：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">sudo</span> <span class="hljs-built_in">cp</span> -r output/include/* /usr/local/include/<br><span class="hljs-built_in">sudo</span> <span class="hljs-built_in">cp</span> -r output/lib/* /usr/local/lib/<br><span class="hljs-built_in">sudo</span> ldconfig<br></code></pre></td></tr></table></figure></li>
+</ol>
+<hr>
+<h3 id="4-验证安装"><a href="#4-验证安装" class="headerlink" title="4. 验证安装"></a>4. <strong>验证安装</strong></h3><p>通过运行 bRPC 自带的单元测试验证是否安装成功：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">cd</span> <span class="hljs-built_in">test</span><br>./run_tests.sh<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="5-常见问题排查"><a href="#5-常见问题排查" class="headerlink" title="5. 常见问题排查"></a>5. <strong>常见问题排查</strong></h3><h4 id="找不到-Protobuf"><a href="#找不到-Protobuf" class="headerlink" title="找不到 Protobuf"></a>找不到 Protobuf</h4><p>如果 CMake 或 Make 报错找不到 Protobuf，你可以通过设置环境变量指定 Protobuf 的路径：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">export</span> Protobuf_INCLUDE_DIR=/path/to/protobuf/include<br><span class="hljs-built_in">export</span> Protobuf_LIB_DIR=/path/to/protobuf/lib<br></code></pre></td></tr></table></figure>
+
+<p>或者在编译时传递相关路径：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">cmake -DProtobuf_INCLUDE_DIR=/path/to/protobuf/include -DProtobuf_LIB_DIR=/path/to/protobuf/lib ..<br></code></pre></td></tr></table></figure>
+
+<h4 id="找不到依赖的库"><a href="#找不到依赖的库" class="headerlink" title="找不到依赖的库"></a>找不到依赖的库</h4><p>如果编译时报缺少某些依赖库，可以尝试重新安装或检查路径是否正确。确保 <code>LD_LIBRARY_PATH</code> 中包含相关库路径，例如：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">export</span> LD_LIBRARY_PATH=<span class="hljs-variable">$LD_LIBRARY_PATH</span>:/usr/local/lib<br></code></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="6-使用示例"><a href="#6-使用示例" class="headerlink" title="6. 使用示例"></a>6. <strong>使用示例</strong></h3><p>安装完成后，可以参考 <a target="_blank" rel="noopener" href="https://github.com/apache/brpc/blob/master/example/">bRPC 官方示例</a> 来测试 bRPC 的基本功能。例如运行 <code>echo_c++</code> 示例：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs bash"><span class="hljs-built_in">cd</span> example/echo_c++/<br>sh run.sh<br></code></pre></td></tr></table></figure>
+
+<hr>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/C/" class="category-chain-item">C++</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/brpc-C/" class="print-no-link">#brpc C++</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>brpc编译环境搭建</div>
+      <div>https://yangtzeshore.github.io/2025/01/02/BrpcBuild/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Chen Peng</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2025年1月2日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-cc-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2024/11/16/Coroutine%E2%85%A0/" title="协程调用系统函数会发生什么？">
+                        <span class="hidden-mobile">协程调用系统函数会发生什么？</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'yangtzeshore/yangtzeshore.github.io');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/5.0.0/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
